@@ -873,34 +873,38 @@ function renderChart(stages, histData) {
  
 async function loadData() {
   document.getElementById('load-area').style.display = 'flex';
-  document.getElementById('load-area').innerHTML = '<div class="spinner"></div><span>Sincronizando dados...</span>';
+  document.getElementById('load-area').innerHTML = '<div class="spinner"></div><span>Buscando oportunidades...</span>';
   document.getElementById('main').style.display = 'none';
   document.getElementById('err-area').innerHTML = '';
 
   try {
     const range = getDateRange();
 
-    // 1. DADOS ATUAIS (Baseados no Pipeline/CRM no período selecionado)
+    // 1. Dados do Período (Cards principais)
     const oppsNoPeriod = await fetchAllOpportunities(range);
     const stagesNoPeriod = processOpportunities(oppsNoPeriod);
 
-    // 2. BUSCA DE HISTÓRICOS (O segredo para preencher a 3ª coluna da imagem)
-    // Note que busquei históricos para TODOS, mesmo que seu layout atual só mostre alguns
+    // 2. Dados do Pipeline (Posição atual no CRM)
+    const oppsAll = await fetchAllOpportunities(null);
+    const stagesAll = processOpportunities(oppsAll);
+
+    document.getElementById('load-area').innerHTML = '<div class="spinner"></div><span>Buscando históricos individuais para cada cartão...</span>';
+
+    // 3. BUSCA DE HISTÓRICOS TOTAIS (Para TODOS os cartões)
+    // Criei uma tarefa para cada histórico de cada cartão da imagem
     const histTasks = [
-      () => fetchContactsByTag('etapa:lead-novo', null),       // Histórico p/ Coluna 1 - Linha 1
-      () => fetchContactsByTag(TAGS.conv, null),              // Histórico p/ Coluna 3 - Linha 1
-      () => fetchContactsByTag('etapa:desqualificado', null),  // Histórico p/ Coluna 1 - Linha 2
-      () => fetchContactsByTag(TAGS.qual, null),              // Histórico p/ Coluna 3 - Linha 2
-      () => fetchContactsByTag('etapa:reuniao-closer', null),  // Histórico p/ Coluna 1 - Linha 3
-      () => fetchContactsByTag(TAGS.fech, null),              // Histórico p/ Coluna 3 - Linha 3
-      () => fetchContactsByTag('etapa:followup-closer', null), // Histórico p/ Coluna 1 - Linha 4
-      () => fetchContactsByTag(TAGS.aca, null),               // Histórico p/ Coluna 3 - Linha 4
+      () => fetchContactsByTag('etapa:lead-novo', null),       // Histórico p/ Lead Novo
+      () => fetchContactsByTag(TAGS.conv, null),              // Histórico p/ Em Conversa
+      () => fetchContactsByTag('etapa:desqualificado', null),  // Histórico p/ Desqualificados
+      () => fetchContactsByTag(TAGS.qual, null),              // Histórico p/ Qualificados
+      () => fetchContactsByTag('etapa:reuniao-closer', null),  // Histórico p/ Reunião Closer
+      () => fetchContactsByTag(TAGS.fech, null),              // Histórico p/ Contratos Fechados
+      () => fetchContactsByTag('etapa:followup-closer', null), // Histórico p/ Follow Up Closer
+      () => fetchContactsByTag(TAGS.aca, null),               // Histórico p/ Follow Up Ativo
     ];
-    
-    document.getElementById('load-area').innerHTML = '<div class="spinner"></div><span>Cruzando histórico via Tags...</span>';
     const [hNovo, hConv, hDesq, hQual, hReu, hFech, hAcd, hAca] = await runSequential(histTasks, 300);
 
-    // 3. BUSCA DE QUEM "PASSOU" PELA ETAPA NO PERÍODO (Números Brancos da 2ª Coluna)
+    // 4. BUSCA DE ATIVIDADE NO PERÍODO (Somente o que houve no mês)[cite: 1]
     const periodTasks = [
       () => fetchContactsByTag(TAGS.conv, range),
       () => fetchContactsByTag(TAGS.qual, range),
@@ -909,52 +913,68 @@ async function loadData() {
     ];
     const [nowConv, nowQual, nowFech, nowAca] = await runSequential(periodTasks, 300);
 
-    // 4. MAPEAMENTO DIRETO PARA A INTERFACE (Conforme image_5514a3.png)[cite: 1]
+    // 5. Variáveis de posicionamento (CRM)[cite: 1]
+    const novos = stagesNoPeriod['Lead Novo']?.count || 0;
+    const desq  = stagesNoPeriod['Desqualificado (triagem)']?.count || 0;
+    const reu   = stagesNoPeriod['Reunião Closer']?.count || 0;
+    const acd   = stagesNoPeriod['Follow Up Closer']?.count || 0;
+
+    // 6. ATUALIZAÇÃO DOS PARES (Cada cartão agora tem seu histórico)[cite: 1]
     
-    // --- TOPO DO FUNIL ---
-    setEl('k-novos', fmtNum(stagesNoPeriod['Lead Novo']?.count || 0));
-    setEl('k-novos-hist', fmtNum(hNovo));   // Caso você queira adicionar histórico no 1º card
-    setEl('k-conv', fmtNum(nowConv));       // Coluna 2
-    setEl('k-conv-hist', fmtNum(hConv));    // Coluna 3 (Onde está o "5" na sua imagem)
+    // TOPO DO FUNIL
+    setEl('k-novos', fmtNum(novos));
+    setEl('k-novos-hist', fmtNum(hNovo));   // Histórico específico de Lead Novo
+    
+    setEl('k-conv', fmtNum(nowConv));      
+    setEl('k-conv-hist', fmtNum(hConv));    // Histórico específico de Em Conversa
+    
+    // TRIAGEM
+    setEl('k-desq', fmtNum(desq));   
+    setEl('k-desq-hist', fmtNum(hDesq));    // Histórico específico de Desqualificados
+    
+    setEl('k-qual', fmtNum(nowQual));   
+    setEl('k-qual-hist', fmtNum(hQual));    // Histórico específico de Qualificados
+    
+    // REUNIÃO E FECHAMENTO
+    setEl('k-reu', fmtNum(reu));     
+    setEl('k-reu-hist', fmtNum(hReu));      // Histórico específico de Reunião Closer
+    
+    setEl('k-fech', fmtNum(nowFech));   
+    setEl('k-fech-hist', fmtNum(hFech));    // Histórico específico de Contratos Fechados
+    
+    // ACOMPANHAMENTO
+    setEl('k-acd', fmtNum(acd));     
+    setEl('k-acd-hist', fmtNum(hAcd));      // Histórico específico de Follow Up Closer
+    
+    setEl('k-aca', fmtNum(nowAca));     
+    setEl('k-aca-hist', fmtNum(hAca));      // Histórico específico de Follow Up Ativo
 
-    // --- TRIAGEM ---
-    setEl('k-desq', fmtNum(stagesNoPeriod['Desqualificado (triagem)']?.count || 0));
-    setEl('k-desq-hist', fmtNum(hDesq));
-    setEl('k-qual', fmtNum(nowQual));       // Coluna 2
-    setEl('k-qual-hist', fmtNum(hQual));    // Coluna 3 (Onde está o "4" na sua imagem)
+    // 7. Renderização Visual e Gráficos[cite: 1]
+    const allTagTasks = ALL_TAGS.map(t => () => fetchContactsByTag(t.key, range));
+    const tagResults = await runSequential(allTagTasks, 300);
+    const tagCounts = {};
+    ALL_TAGS.forEach((t, i) => { tagCounts[t.key] = tagResults[i]; });
 
-    // --- REUNIÃO E FECHAMENTO ---
-    setEl('k-reu', fmtNum(stagesNoPeriod['Reunião Closer']?.count || 0));
-    setEl('k-reu-hist', fmtNum(hReu));
-    setEl('k-fech', fmtNum(nowFech));       // Coluna 2 (Onde está o "1" na sua imagem)
-    setEl('k-fech-hist', fmtNum(hFech));    // Coluna 3 (Onde está o "6" na sua imagem)
-
-    // --- ACOMPANHAMENTO ---
-    setEl('k-acd', fmtNum(stagesNoPeriod['Follow Up Closer']?.count || 0));
-    setEl('k-acd-hist', fmtNum(hAcd));
-    setEl('k-aca', fmtNum(nowAca));       // Coluna 2
-    setEl('k-aca-hist', fmtNum(hAca));    // Coluna 3 (Onde está o "3" na sua imagem)
-
-    // 5. ATUALIZAÇÃO DE PORCENTAGENS E COMPONENTES[cite: 1]
-    const novosCount = stagesNoPeriod['Lead Novo']?.count || 0;
-    setEl('p-conv', pct(nowConv, novosCount));
-    setEl('p-qual', pct(nowQual, nowConv));
-    setEl('p-fech', pct(nowFech, stagesNoPeriod['Reunião Closer']?.count || 0));
-
-    // Finalização de Gráficos e UI[cite: 1]
-    const tagCounts = {}; // Mapeamento para os gráficos de barra
     const histData = [hNovo, hConv, hQual, hDesq, hReu, hAcd, hAca, hFech];
-    
-    renderFunnelStages(processOpportunities(await fetchAllOpportunities(null)), novosCount, histData);
-    renderChart(stagesNoPeriod, histData);
+ 
+    renderTaxaConversaoReal(tagCounts);
+    renderTagFunnel(tagCounts);
+    renderFunnelStages(stagesAll, novos, histData);
+    renderValorGrid(stagesAll);
+    renderChart(stagesAll, histData);
 
     document.getElementById('load-area').style.display = 'none';
     document.getElementById('main').style.display = 'block';
 
+    // 8. Timestamps[cite: 1]
+    const time = new Date().toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    setEl('upd-time', 'Atualizado ' + time);
+    setEl('footer-time', 'Última atualização: ' + time);
+
   } catch (e) {
     console.error(e);
     document.getElementById('load-area').style.display = 'none';
-    document.getElementById('err-area').innerHTML = `<div class="err-box">❌ Erro ao carregar: ${e.message}</div>`;
+    document.getElementById('err-area').innerHTML = `<div class="err-box">❌ Erro: ${e.message}</div>`;
   }
 }
   
