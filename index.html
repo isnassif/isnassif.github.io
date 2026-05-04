@@ -872,118 +872,140 @@ function renderChart(stages, histData) {
 }
  
 async function loadData() {
-  document.getElementById('load-area').style.display='flex';
-  document.getElementById('load-area').innerHTML='<div class="spinner"></div><span>Buscando oportunidades...</span>';
-  document.getElementById('main').style.display='none';
-  document.getElementById('err-area').innerHTML='';
- 
+  document.getElementById('load-area').style.display = 'flex';
+  document.getElementById('load-area').innerHTML = '<div class="spinner"></div><span>Buscando oportunidades...</span>';
+  document.getElementById('main').style.display = 'none';
+  document.getElementById('err-area').innerHTML = '';
+
   try {
     const range = getDateRange();
- 
+
+    // 1. Busca oportunidades filtradas pelo período (Para o Topo do Funil e KPIs de entrada)
     const oppsNoPeriod = await fetchAllOpportunities(range);
     const stagesNoPeriod = processOpportunities(oppsNoPeriod);
- 
-    document.getElementById('load-area').innerHTML='<div class="spinner"></div><span>Buscando pipeline atual...</span>';
+
+    // 2. Busca todas as oportunidades (Para Posição Atual no CRM)
     const oppsAll = await fetchAllOpportunities(null);
     const stagesAll = processOpportunities(oppsAll);
- 
-    document.getElementById('load-area').innerHTML='<div class="spinner"></div><span>Buscando histórico via tags...</span>';
- 
-    const histTasks=[
-      ()=>fetchContactsByTag(TAGS.conv, null),
-      ()=>fetchContactsByTag(TAGS.qual, null),
-      ()=>fetchContactsByTag(TAGS.fech, null),
-      ()=>fetchContactsByTag(TAGS.aca,  null),
+
+    document.getElementById('load-area').innerHTML = '<div class="spinner"></div><span>Buscando histórico total...</span>';
+
+    // 3. BUSCA HISTÓRICO TOTAL (Sem filtro de data - Acumulado de todos os tempos)
+    const histTasks = [
+      () => fetchContactsByTag(TAGS.conv, null),
+      () => fetchContactsByTag(TAGS.qual, null),
+      () => fetchContactsByTag(TAGS.fech, null),
+      () => fetchContactsByTag(TAGS.aca, null),
     ];
-    const [histConv,histQual,histFech,histAca]=await runSequential(histTasks,300);
-    const histData=[null,histConv,histQual,null,null,null,histAca,histFech];
- 
-    document.getElementById('load-area').innerHTML='<div class="spinner"></div><span>Calculando funil real por tag...</span>';
-    const allTagTasks=ALL_TAGS.map(t=>()=>fetchContactsByTag(t.key, range));
-    const tagResults=await runSequential(allTagTasks,300);
-    const tagCounts={};
-    ALL_TAGS.forEach((t,i)=>{tagCounts[t.key]=tagResults[i];});
- 
+    const [histConv, histQual, histFech, histAca] = await runSequential(histTasks, 300);
+    const histData = [null, histConv, histQual, null, null, null, histAca, histFech];
+
+    document.getElementById('load-area').innerHTML = '<div class="spinner"></div><span>Filtrando contatos que tocaram no período...</span>';
+
+    // 4. BUSCA QUEM TOCOU NAS ETAPAS NO PERÍODO SELECIONADO (Filtro correto)
+    // Isso garante que se você filtrou "Este mês", o número reflita apenas a atividade deste mês
+    const periodTasks = [
+      () => fetchContactsByTag(TAGS.conv, range),
+      () => fetchContactsByTag(TAGS.qual, range),
+      () => fetchContactsByTag(TAGS.fech, range),
+      () => fetchContactsByTag(TAGS.aca, range)
+    ];
+    const [nowConv, nowQual, nowFech, nowAca] = await runSequential(periodTasks, 300);
+
+    // 5. Atribuição de variáveis para os Cards
     const novos = stagesNoPeriod['Lead Novo']?.count || 0;
-    const conv  = stagesAll['Em conversa']?.count || 0;
-    const qual  = stagesAll['Qualificado']?.count || 0;
-    const desq  = stagesAll['Desqualificado (triagem)']?.count || 0;
-    const reu   = stagesAll['Reunião Closer']?.count || 0;
-    const fech  = stagesAll['Contrato Fechado']?.count || 0;
-    const acd   = stagesAll['Follow Up Closer']?.count || 0;
-    const aca   = stagesAll['Follow Up Ativo']?.count || 0;
- 
-    setEl('k-novos',fmtNum(novos));
-    setEl('k-conv',fmtNum(conv));   setEl('m-conv',`de ${fmtNum(novos)} leads novos`);   setEl('p-conv',pct(conv,novos));
-    setEl('k-conv-hist',fmtNum(histConv));
-    setEl('k-desq',fmtNum(desq));   setEl('m-desq',`de ${fmtNum(conv)} em conversa`);    setEl('p-desq',pct(desq,conv));
-    setEl('k-qual',fmtNum(qual));   setEl('m-qual',`de ${fmtNum(conv)} em conversa`);    setEl('p-qual',pct(qual,conv));
-    setEl('k-qual-hist',fmtNum(histQual));
-    setEl('k-reu',fmtNum(reu));     setEl('m-reu',`de ${fmtNum(qual)} qualificados`);    setEl('p-reu',pct(reu,qual));
-    setEl('k-fech',fmtNum(fech));   setEl('m-fech',`de ${fmtNum(reu)} reuniões`);        setEl('p-fech',pct(fech,reu));
-    setEl('k-fech-hist',fmtNum(histFech));
-    setEl('k-acd',fmtNum(acd));     setEl('m-acd',`de ${fmtNum(reu)} reuniões`);         setEl('p-acd',pct(acd,reu));
-    setEl('k-aca',fmtNum(aca));     setEl('m-aca',`de ${fmtNum(reu)} reuniões`);         setEl('p-aca',pct(aca,reu));
-    setEl('k-aca-hist',fmtNum(histAca));
- 
-    const ratesData=[
-      [conv,novos],[qual,conv],[desq,conv],[reu,qual],
-      [fech,reu],[aca,reu],[histFech,histAca],[fech,novos]
-    ];
-    const rateSubs=[
-      `${fmtNum(conv)} de ${fmtNum(novos)}`,
-      `${fmtNum(qual)} de ${fmtNum(conv)}`,
-      `${fmtNum(desq)} de ${fmtNum(conv)}`,
-      `${fmtNum(reu)} de ${fmtNum(qual)}`,
-      `${fmtNum(fech)} de ${fmtNum(reu)}`,
-      `${fmtNum(aca)} de ${fmtNum(reu)}`,
-      `${fmtNum(histFech)} de ${fmtNum(histAca)} (histórico)`,
-      `${fmtNum(fech)} de ${fmtNum(novos)}`
-    ];
-    ratesData.forEach(([a,b],i)=>{
-      setEl(`tx${i+1}`,pct(a,b));
-      setEl(`ts${i+1}`,rateSubs[i]);
-      setBar(`bar${i+1}`,a,b);
-    });
- 
+    
+    // "Tocaram" (Filtrados pelo range de data)
+    const conv = nowConv; 
+    const qual = nowQual;
+    const fech = nowFech; // Aqui aparecerá "1" se houver apenas um lead no mês
+    const aca = nowAca;
+
+    // Dados baseados na posição atual do funil no CRM
+    const desq = stagesNoPeriod['Desqualificado (triagem)']?.count || 0;
+    const reu = stagesNoPeriod['Reunião Closer']?.count || 0;
+    const acd = stagesNoPeriod['Follow Up Closer']?.count || 0;
+
+    // 6. Atualização da Interface (KPIs Principais)
+    setEl('k-novos', fmtNum(novos));
+    
+    // Em Conversa
+    setEl('k-conv', fmtNum(conv));      
+    setEl('k-conv-hist', fmtNum(histConv)); // Histórico total (ex: 5)
+    
+    setEl('k-desq', fmtNum(desq));   
+    
+    // Qualificados
+    setEl('k-qual', fmtNum(qual));   
+    setEl('k-qual-hist', fmtNum(histQual)); // Histórico total (ex: 4)
+    
+    setEl('k-reu', fmtNum(reu));     
+    
+    // Contratos Fechados
+    setEl('k-fech', fmtNum(fech));         // Atual filtrado (ex: 1)
+    setEl('k-fech-hist', fmtNum(histFech)); // Histórico total (ex: 6)
+    
+    setEl('k-acd', fmtNum(acd));     
+    setEl('k-aca', fmtNum(aca));     
+    setEl('k-aca-hist', fmtNum(histAca));
+
+    // Atualização de Metas e Porcentagens
+    setEl('m-conv', `de ${fmtNum(novos)} novos`);   setEl('p-conv', pct(conv, novos));
+    setEl('m-desq', `de ${fmtNum(conv)} em conversa`); 
+    setEl('m-qual', `de ${fmtNum(conv)} em conversa`); setEl('p-qual', pct(qual, conv));
+    setEl('m-reu', `de ${fmtNum(qual)} qualificados`); setEl('p-reu', pct(reu, qual));
+    setEl('m-fech', `de ${fmtNum(reu)} reuniões`);     setEl('p-fech', pct(fech, reu));
+
+    // 7. Funil por Tags (Barra Horizontal)
+    const allTagTasks = ALL_TAGS.map(t => () => fetchContactsByTag(t.key, range));
+    const tagResults = await runSequential(allTagTasks, 300);
+    const tagCounts = {};
+    ALL_TAGS.forEach((t, i) => { tagCounts[t.key] = tagResults[i]; });
+
+    // 8. Renderização de Componentes Visuais
     renderTaxaConversaoReal(tagCounts);
     renderTagFunnel(tagCounts);
     renderFunnelStages(stagesAll, novos, histData);
     renderValorGrid(stagesAll);
     renderChart(stagesAll, histData);
- 
-    document.getElementById('load-area').style.display='none';
-    document.getElementById('main').style.display='block';
- 
-    document.getElementById('time-stages-grid').innerHTML=`
+
+    document.getElementById('load-area').style.display = 'none';
+    document.getElementById('main').style.display = 'block';
+
+    // 9. Processamento de Tempos Médios (Notes)
+    document.getElementById('time-stages-grid').innerHTML = `
       <div class="state-box" style="min-height:100px;grid-column:1/-1">
         <div class="spinner"></div>
         <span id="time-status">Buscando notas dos contatos...</span>
       </div>`;
- 
-    const updateStatus = (msg) => { const el=document.getElementById('time-status'); if(el) el.textContent=msg; };
- 
+
+    const updateStatus = (msg) => { 
+      const el = document.getElementById('time-status'); 
+      if (el) el.textContent = msg; 
+    };
+
     try {
       const transitionData = await calcTimeBetweenStages(updateStatus);
       renderTimeBetweenStages(transitionData);
-    } catch(e) {
-      document.getElementById('time-stages-grid').innerHTML=`
+    } catch (e) {
+      document.getElementById('time-stages-grid').innerHTML = `
         <div style="grid-column:1/-1;font-size:12px;color:var(--text3);padding:16px;">
           ⚠️ Não foi possível calcular os tempos: ${e.message}
         </div>`;
     }
- 
-    const now=new Date();
-    const time=now.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
-    setEl('upd-time','Atualizado '+time);
-    setEl('footer-time','Última atualização: '+time);
- 
-  } catch(e) {
-    document.getElementById('load-area').style.display='none';
-    document.getElementById('err-area').innerHTML=`<div class="err-box">❌ ${e.message}<br><small>Verifique se o token GHL é válido e tem permissões de Opportunities e Contacts.</small></div>`;
+
+    // 10. Footer e Timestamps
+    const now = new Date();
+    const time = now.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    setEl('upd-time', 'Atualizado ' + time);
+    setEl('footer-time', 'Última atualização: ' + time);
+
+  } catch (e) {
+    console.error(e);
+    document.getElementById('load-area').style.display = 'none';
+    document.getElementById('err-area').innerHTML = `<div class="err-box">❌ ${e.message}<br><small>Verifique a conexão com a API.</small></div>`;
   }
-}
- 
+} 
 loadData();
 </script>
 </body>
