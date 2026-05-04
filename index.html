@@ -172,9 +172,9 @@ body {
 .tf-label { font-size: 13px; font-weight: 500; color: var(--text); }
 .tf-bar-wrap { height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden; border: 1px solid var(--border); }
 .tf-bar { height: 100%; border-radius: 4px; transition: width .7s cubic-bezier(.4,0,.2,1); }
-@media (max-width: 600px) { .tag-funnel-row { grid-template-columns: 130px 1fr 50px; } .tf-pct { display: none; } }
 .tf-count { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: var(--text); text-align: right; }
 .tf-pct { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text3); text-align: right; }
+@media (max-width: 600px) { .tag-funnel-row { grid-template-columns: 130px 1fr 50px; } .tf-pct { display: none; } }
  
 /* ── FUNNEL STAGES (pipeline) ── */
 .funnel-wrap { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; box-shadow: var(--shadow); }
@@ -188,12 +188,12 @@ body {
 .fs-hist { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text3); width: 90px; text-align: right; flex-shrink: 0; }
  
 /* ── CHART ── */
-.legend-dot { width: 8px; height: 8px; border-radius: 50%; }
 .chart-box { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow); }
 .chart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
 .chart-title { font-size: 14px; font-weight: 700; }
 .chart-legend { display: flex; flex-wrap: wrap; gap: 12px; }
 .legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text2); }
+.legend-dot { width: 8px; height: 8px; border-radius: 50%; }
 .chart-wrap { position: relative; width: 100%; height: 260px; }
  
 /* ── RATE CARDS ── */
@@ -268,12 +268,12 @@ body {
  
   <div class="header">
     <div class="brand">
-     <div class="brand-mark">
-      <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect width="64" height="64" rx="10" fill="#ef4444"/>
-        <text x="32" y="45" font-family="Plus Jakarta Sans, sans-serif" font-size="36" font-weight="700" fill="white" text-anchor="middle">N1</text>
-      </svg>
-    </div>
+      <div class="brand-mark">
+        <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="64" height="64" rx="10" fill="#ef4444"/>
+          <text x="32" y="45" font-family="Plus Jakarta Sans, sans-serif" font-size="36" font-weight="700" fill="white" text-anchor="middle">N1</text>
+        </svg>
+      </div>
       <div>
         <div class="brand-name">N1 Company</div>
         <div class="brand-sub">Dashboard Comercial — Funil Real</div>
@@ -518,6 +518,8 @@ body {
 <script>
 const LOC = 'bkEYz03xy6gKR3QBWx30';
 const PID = 'XEkSWuSVzEpyyDhA1IAi';
+const GHL_TOKEN = 'pit-cb8ac95c-815c-4981-abd0-0a3d573a5f1d';
+const API = 'https://services.leadconnectorhq.com';
  
 const STAGE_NAMES = [
   'Lead Novo','Em conversa','Qualificado','Desqualificado (triagem)',
@@ -557,18 +559,51 @@ function cacheSet(key,value) { _cache[key]={ts:Date.now(),value}; }
  
 function sleep(ms) { return new Promise(r=>setTimeout(r,ms)); }
  
-async function ghl(path, params={}, method='GET', body=null) {
-  const MAX_RETRIES = 4;
-  for (let attempt=0; attempt<MAX_RETRIES; attempt++) {
-    const resp = await fetch('/.netlify/functions/ghl', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({path,params,method,body})
-    });
-    if (resp.status===429) { await sleep(1000*Math.pow(2,attempt)); continue; }
-    if (!resp.ok) { const t=await resp.text(); throw new Error(`Proxy erro ${resp.status}: ${t}`); }
-    return resp.json();
+async function ghlFetch(path, params={}, method='GET', body=null) {
+  const MAX_RETRIES = 5;
+  const BASE_DELAY_MS = 1000;
+
+  let url = `${API}${path}`;
+  let fetchOptions = {
+    method: method,
+    headers: {
+      'Authorization': `Bearer ${GHL_TOKEN}`,
+      'Version': '2021-07-28',
+      'Content-Type': 'application/json'
+    }
+  };
+
+  if (method === 'GET' && Object.keys(params).length > 0) {
+    url += '?' + new URLSearchParams(params).toString();
+  } else if (method === 'POST') {
+    fetchOptions.body = JSON.stringify(body || params || {});
   }
-  throw new Error('Muitas requisições (429). Tente novamente.');
+
+  async function fetchWithRetry(url, options, retries = MAX_RETRIES) {
+    for (let attempt = 0; attempt < retries; attempt++) {
+      try {
+        const resp = await fetch(url, options);
+        if (resp.status !== 429) return resp;
+        
+        const retryAfter = resp.headers.get('Retry-After');
+        const waitMs = retryAfter ? parseInt(retryAfter, 10) * 1000 : BASE_DELAY_MS * Math.pow(2, attempt);
+        console.log(`[ghl] 429 recebido. Tentativa ${attempt + 1}/${retries}. Aguardando ${waitMs}ms...`);
+        await sleep(waitMs);
+      } catch(e) {
+        console.error('Erro na requisição:', e);
+      }
+    }
+    return fetch(url, options);
+  }
+
+  try {
+    const resp = await fetchWithRetry(url, fetchOptions);
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.message || `API error ${resp.status}`);
+    return data;
+  } catch(e) {
+    throw new Error(`Erro na API GHL: ${e.message}`);
+  }
 }
  
 async function runSequential(tasks, delayMs=200) {
@@ -622,7 +657,7 @@ async function fetchAllOpportunities(range) {
   let all=[],page=1;
   while(true){
     const params={locationId:LOC,pipelineId:PID,limit:100,page};
-    const d=await ghl('/opportunities/search',params);
+    const d=await ghlFetch('/opportunities/search',params);
     const ops=d.opportunities||[];
     const filtered=range?ops.filter(op=>{
       const created=op.createdAt?new Date(op.createdAt).getTime():0;
@@ -642,7 +677,7 @@ async function fetchContactsByTag(tag, range) {
   const from = range ? new Date(range.start).getTime() : null;
   const to   = range ? new Date(range.end).getTime()   : null;
   while(true){
-    const d=await ghl('/contacts/',{locationId:LOC,limit:100,page});
+    const d=await ghlFetch('/contacts/',{locationId:LOC,limit:100,page});
     const cs=d.contacts||[];
     total+=cs.filter(c=>{
       if(!(c.tags||[]).map(t=>t.toLowerCase()).includes(tagLower)) return false;
@@ -662,7 +697,7 @@ async function fetchContactNotes(contactId) {
   const cacheKey = `notes:${contactId}`;
   const cached = cacheGet(cacheKey); if(cached !== null) return cached;
   try {
-    const d = await ghl(`/contacts/${contactId}/notes`, {});
+    const d = await ghlFetch(`/contacts/${contactId}/notes`, {});
     const notes = d.notes || [];
     cacheSet(cacheKey, notes);
     return notes;
@@ -692,7 +727,7 @@ async function calcTimeBetweenStages(updateStatus) {
  
   let allContacts = [], page = 1;
   while(true) {
-    const d = await ghl('/contacts/', { locationId: LOC, limit: 100, page });
+    const d = await ghlFetch('/contacts/', { locationId: LOC, limit: 100, page });
     const cs = d.contacts || [];
     allContacts = allContacts.concat(cs);
     if (cs.length < 100 || page >= 20) break;
@@ -960,7 +995,7 @@ async function loadData() {
  
   } catch(e) {
     document.getElementById('load-area').style.display='none';
-    document.getElementById('err-area').innerHTML=`<div class="err-box">❌ ${e.message}<br><small>Verifique se a Netlify Function está ativa e o token tem permissões de Opportunities e Contacts.</small></div>`;
+    document.getElementById('err-area').innerHTML=`<div class="err-box">❌ ${e.message}<br><small>Verifique se o token GHL é válido e tem permissões de Opportunities e Contacts.</small></div>`;
   }
 }
  
