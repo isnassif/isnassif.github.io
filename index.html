@@ -926,77 +926,98 @@ async function loadData() {
   document.getElementById('load-area').innerHTML='<div class="spinner"></div><span>Buscando oportunidades...</span>';
   document.getElementById('main').style.display='none';
   document.getElementById('err-area').innerHTML='';
- 
+
   try {
-    const range=getDateRange();
-    const opps=await fetchAllOpportunities(range);
-    const stages=processOpportunities(opps);
- 
+    const range = getDateRange();
+
+    // ── "Lead Novo" usa filtro de período (entradas no período)
+    const oppsNoperiod = await fetchAllOpportunities(range);
+    const stagesNoPeriod = processOpportunities(oppsNoperiod);
+
+    // ── Todos os outros "atual" buscam SEM filtro de data (snapshot real do pipeline)
+    document.getElementById('load-area').innerHTML='<div class="spinner"></div><span>Buscando pipeline atual...</span>';
+    const oppsAll = await fetchAllOpportunities(null);
+    const stagesAll = processOpportunities(oppsAll);
+
     document.getElementById('load-area').innerHTML='<div class="spinner"></div><span>Buscando histórico via tags...</span>';
- 
+
     const histTasks=[
-      ()=>fetchContactsByTag(TAGS.conv, range),
-      ()=>fetchContactsByTag(TAGS.qual, range),
-      ()=>fetchContactsByTag(TAGS.fech, range),
-      ()=>fetchContactsByTag(TAGS.aca,  range),
+      ()=>fetchContactsByTag(TAGS.conv, null),   // histórico sempre sem filtro de data
+      ()=>fetchContactsByTag(TAGS.qual, null),
+      ()=>fetchContactsByTag(TAGS.fech, null),
+      ()=>fetchContactsByTag(TAGS.aca,  null),
     ];
     const [histConv,histQual,histFech,histAca]=await runSequential(histTasks,300);
     const histData=[null,histConv,histQual,null,null,null,histAca,histFech];
- 
+
     document.getElementById('load-area').innerHTML='<div class="spinner"></div><span>Calculando funil real por tag...</span>';
     const allTagTasks=ALL_TAGS.map(t=>()=>fetchContactsByTag(t.key, range));
     const tagResults=await runSequential(allTagTasks,300);
     const tagCounts={};
     ALL_TAGS.forEach((t,i)=>{tagCounts[t.key]=tagResults[i];});
- 
-    const novos=stages['Lead Novo']?.count||0;
-    const conv=stages['Em conversa']?.count||0;
-    const qual=stages['Qualificado']?.count||0;
-    const desq=stages['Desqualificado (triagem)']?.count||0;
-    const reu=stages['Reunião Closer']?.count||0;
-    const fech=stages['Contrato Fechado']?.count||0;
-    const acd=stages['Acompanhamento mais detalhado']?.count||0;
-    const aca=stages['Acompanhamento Ativo']?.count||0;
- 
+
+    // ── Lead Novo: usa período (entradas no período)
+    const novos = stagesNoPeriod['Lead Novo']?.count || 0;
+
+    // ── Todos os outros: snapshot atual do pipeline (sem filtro de data)
+    const conv  = stagesAll['Em conversa']?.count || 0;
+    const qual  = stagesAll['Qualificado']?.count || 0;
+    const desq  = stagesAll['Desqualificado (triagem)']?.count || 0;
+    const reu   = stagesAll['Reunião Closer']?.count || 0;
+    const fech  = stagesAll['Contrato Fechado']?.count || 0;
+    const acd   = stagesAll['Acompanhamento mais detalhado']?.count || 0;
+    const aca   = stagesAll['Acompanhamento Ativo']?.count || 0;
+
     setEl('k-novos',fmtNum(novos));
-    setEl('k-conv',fmtNum(conv)); setEl('m-conv',`de ${fmtNum(novos)} leads novos`); setEl('p-conv',pct(conv,novos));
+    setEl('k-conv',fmtNum(conv));   setEl('m-conv',`de ${fmtNum(novos)} leads novos`);   setEl('p-conv',pct(conv,novos));
     setEl('k-conv-hist',fmtNum(histConv));
-    setEl('k-desq',fmtNum(desq)); setEl('m-desq',`de ${fmtNum(conv)} em conversa`); setEl('p-desq',pct(desq,conv));
-    setEl('k-qual',fmtNum(qual)); setEl('m-qual',`de ${fmtNum(conv)} em conversa`); setEl('p-qual',pct(qual,conv));
+    setEl('k-desq',fmtNum(desq));   setEl('m-desq',`de ${fmtNum(conv)} em conversa`);    setEl('p-desq',pct(desq,conv));
+    setEl('k-qual',fmtNum(qual));   setEl('m-qual',`de ${fmtNum(conv)} em conversa`);    setEl('p-qual',pct(qual,conv));
     setEl('k-qual-hist',fmtNum(histQual));
-    setEl('k-reu',fmtNum(reu)); setEl('m-reu',`de ${fmtNum(qual)} qualificados`); setEl('p-reu',pct(reu,qual));
-    setEl('k-fech',fmtNum(fech)); setEl('m-fech',`de ${fmtNum(reu)} reuniões`); setEl('p-fech',pct(fech,reu));
+    setEl('k-reu',fmtNum(reu));     setEl('m-reu',`de ${fmtNum(qual)} qualificados`);    setEl('p-reu',pct(reu,qual));
+    setEl('k-fech',fmtNum(fech));   setEl('m-fech',`de ${fmtNum(reu)} reuniões`);        setEl('p-fech',pct(fech,reu));
     setEl('k-fech-hist',fmtNum(histFech));
-    setEl('k-acd',fmtNum(acd)); setEl('m-acd',`de ${fmtNum(reu)} reuniões`); setEl('p-acd',pct(acd,reu));
-    setEl('k-aca',fmtNum(aca)); setEl('m-aca',`de ${fmtNum(reu)} reuniões`); setEl('p-aca',pct(aca,reu));
+    setEl('k-acd',fmtNum(acd));     setEl('m-acd',`de ${fmtNum(reu)} reuniões`);         setEl('p-acd',pct(acd,reu));
+    setEl('k-aca',fmtNum(aca));     setEl('m-aca',`de ${fmtNum(reu)} reuniões`);         setEl('p-aca',pct(aca,reu));
     setEl('k-aca-hist',fmtNum(histAca));
- 
-    const ratesData=[[conv,novos],[qual,conv],[desq,conv],[reu,qual],[fech,reu],[aca,reu],[histFech,histAca],[fech,novos]];
-    const rateSubs=[
-      `${fmtNum(conv)} de ${fmtNum(novos)}`,`${fmtNum(qual)} de ${fmtNum(conv)}`,
-      `${fmtNum(desq)} de ${fmtNum(conv)}`,`${fmtNum(reu)} de ${fmtNum(qual)}`,
-      `${fmtNum(fech)} de ${fmtNum(reu)}`,`${fmtNum(aca)} de ${fmtNum(reu)}`,
-      `${fmtNum(histFech)} de ${fmtNum(histAca)} (histórico)`,`${fmtNum(fech)} de ${fmtNum(novos)}`
+
+    const ratesData=[
+      [conv,novos],[qual,conv],[desq,conv],[reu,qual],
+      [fech,reu],[aca,reu],[histFech,histAca],[fech,novos]
     ];
-    ratesData.forEach(([a,b],i)=>{setEl(`tx${i+1}`,pct(a,b));setEl(`ts${i+1}`,rateSubs[i]);setBar(`bar${i+1}`,a,b);});
- 
+    const rateSubs=[
+      `${fmtNum(conv)} de ${fmtNum(novos)}`,
+      `${fmtNum(qual)} de ${fmtNum(conv)}`,
+      `${fmtNum(desq)} de ${fmtNum(conv)}`,
+      `${fmtNum(reu)} de ${fmtNum(qual)}`,
+      `${fmtNum(fech)} de ${fmtNum(reu)}`,
+      `${fmtNum(aca)} de ${fmtNum(reu)}`,
+      `${fmtNum(histFech)} de ${fmtNum(histAca)} (histórico)`,
+      `${fmtNum(fech)} de ${fmtNum(novos)}`
+    ];
+    ratesData.forEach(([a,b],i)=>{
+      setEl(`tx${i+1}`,pct(a,b));
+      setEl(`ts${i+1}`,rateSubs[i]);
+      setBar(`bar${i+1}`,a,b);
+    });
+
     renderTaxaConversaoReal(tagCounts);
     renderTagFunnel(tagCounts);
-    renderFunnelStages(stages,novos,histData);
-    renderValorGrid(stages);
-    renderChart(stages,histData);
- 
+    renderFunnelStages(stagesAll, novos, histData);
+    renderValorGrid(stagesAll);
+    renderChart(stagesAll, histData);
+
     document.getElementById('load-area').style.display='none';
     document.getElementById('main').style.display='block';
- 
+
     document.getElementById('time-stages-grid').innerHTML=`
       <div class="state-box" style="min-height:100px;grid-column:1/-1">
         <div class="spinner"></div>
         <span id="time-status">Buscando notas dos contatos...</span>
       </div>`;
- 
+
     const updateStatus = (msg) => { const el=document.getElementById('time-status'); if(el) el.textContent=msg; };
- 
+
     try {
       const transitionData = await calcTimeBetweenStages(updateStatus);
       renderTimeBetweenStages(transitionData);
@@ -1006,18 +1027,18 @@ async function loadData() {
           ⚠️ Não foi possível calcular os tempos: ${e.message}
         </div>`;
     }
- 
+
     const now=new Date();
     const time=now.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
     setEl('upd-time','Atualizado '+time);
     setEl('footer-time','Última atualização: '+time);
- 
+
   } catch(e) {
     document.getElementById('load-area').style.display='none';
     document.getElementById('err-area').innerHTML=`<div class="err-box">❌ ${e.message}<br><small>Verifique se o token GHL é válido e tem permissões de Opportunities e Contacts.</small></div>`;
   }
 }
- 
+  
 loadData();
 </script>
 </body>
