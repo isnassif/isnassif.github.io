@@ -654,22 +654,26 @@ function fmtHours(hours) {
 async function fetchAllOpportunities(range) {
   const cacheKey=`opps:${range?range.start+range.end:'all'}`;
   const cached=cacheGet(cacheKey); if(cached){return cached;}
-  let all=[],page=1;
+  let all=[], startAfter=null, startAfterId=null;
   while(true){
-    const params={locationId:LOC,pipelineId:PID,limit:100,page};
-    const d=await ghlFetch('/opportunities/search',params);
+    const params={ location_id: LOC, limit:100 };
+    if(startAfter) params.startAfter = startAfter;
+    if(startAfterId) params.startAfterId = startAfterId;
+
+    const d=await ghlFetch('/opportunities/search', params);
     const ops=d.opportunities||[];
     const filtered=range?ops.filter(op=>{
       const created=op.createdAt?new Date(op.createdAt).getTime():0;
       return created>=new Date(range.start).getTime()&&created<=new Date(range.end).getTime();
     }):ops;
     all=all.concat(filtered);
-    if(ops.length<100||page>=50) break;
-    page++; await sleep(150);
+    if(ops.length<100||!d.meta?.nextPageUrl) break;
+    startAfter=d.meta.startAfter;
+    startAfterId=d.meta.startAfterId;
+    await sleep(150);
   }
   cacheSet(cacheKey,all); return all;
-}
- 
+} 
 async function fetchContactsByTag(tag, range) {
   const rangeKey = range ? range.start.slice(0,10)+range.end.slice(0,10) : 'all';
   const cacheKey=`tag:${tag}:${rangeKey}`; const cached=cacheGet(cacheKey); if(cached!==null){return cached;}
