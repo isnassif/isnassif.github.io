@@ -880,33 +880,31 @@ async function loadData() {
   try {
     const range = getDateRange();
 
-    // 1. Busca oportunidades filtradas (Dados atuais/brancos)
+    // 1. Dados do Período (Cards principais)
     const oppsNoPeriod = await fetchAllOpportunities(range);
     const stagesNoPeriod = processOpportunities(oppsNoPeriod);
 
-    // 2. Busca pipeline atual (Posição no CRM)
+    // 2. Dados do Pipeline (Posição atual no CRM)
     const oppsAll = await fetchAllOpportunities(null);
     const stagesAll = processOpportunities(oppsAll);
 
-    document.getElementById('load-area').innerHTML = '<div class="spinner"></div><span>Buscando históricos individuais...</span>';
+    document.getElementById('load-area').innerHTML = '<div class="spinner"></div><span>Buscando históricos individuais para cada cartão...</span>';
 
-    // 3. BUSCA HISTÓRICO TOTAL (Dados cinzas - Todos os tempos)
-    // Cada linha abaixo busca o acumulado histórico daquela etapa específica
+    // 3. BUSCA DE HISTÓRICOS TOTAIS (Para TODOS os cartões)
+    // Criei uma tarefa para cada histórico de cada cartão da imagem
     const histTasks = [
-      () => fetchContactsByTag('etapa:lead-novo', null),       // Histórico de Novos
-      () => fetchContactsByTag(TAGS.conv, null),              // Histórico de Conversa
-      () => fetchContactsByTag('etapa:desqualificado', null),  // Histórico de Desqualificados
-      () => fetchContactsByTag(TAGS.qual, null),              // Histórico de Qualificados
-      () => fetchContactsByTag('etapa:reuniao-closer', null),  // Histórico de Reuniões
-      () => fetchContactsByTag(TAGS.fech, null),              // Histórico de Fechados
-      () => fetchContactsByTag('etapa:followup-closer', null), // Histórico de FU Closer
-      () => fetchContactsByTag(TAGS.aca, null),               // Histórico de FU Ativo
+      () => fetchContactsByTag('etapa:lead-novo', null),       // Histórico p/ Lead Novo
+      () => fetchContactsByTag(TAGS.conv, null),              // Histórico p/ Em Conversa
+      () => fetchContactsByTag('etapa:desqualificado', null),  // Histórico p/ Desqualificados
+      () => fetchContactsByTag(TAGS.qual, null),              // Histórico p/ Qualificados
+      () => fetchContactsByTag('etapa:reuniao-closer', null),  // Histórico p/ Reunião Closer
+      () => fetchContactsByTag(TAGS.fech, null),              // Histórico p/ Contratos Fechados
+      () => fetchContactsByTag('etapa:followup-closer', null), // Histórico p/ Follow Up Closer
+      () => fetchContactsByTag(TAGS.aca, null),               // Histórico p/ Follow Up Ativo
     ];
     const [hNovo, hConv, hDesq, hQual, hReu, hFech, hAcd, hAca] = await runSequential(histTasks, 300);
 
-    document.getElementById('load-area').innerHTML = '<div class="spinner"></div><span>Filtrando atividade do período...</span>';
-
-    // 4. BUSCA ATIVIDADE NO PERÍODO (Dados atuais - Somente o que houve no mês)[cite: 1]
+    // 4. BUSCA DE ATIVIDADE NO PERÍODO (Somente o que houve no mês)[cite: 1]
     const periodTasks = [
       () => fetchContactsByTag(TAGS.conv, range),
       () => fetchContactsByTag(TAGS.qual, range),
@@ -915,48 +913,43 @@ async function loadData() {
     ];
     const [nowConv, nowQual, nowFech, nowAca] = await runSequential(periodTasks, 300);
 
-    // 5. Atribuição de variáveis[cite: 1]
+    // 5. Variáveis de posicionamento (CRM)[cite: 1]
     const novos = stagesNoPeriod['Lead Novo']?.count || 0;
     const desq  = stagesNoPeriod['Desqualificado (triagem)']?.count || 0;
     const reu   = stagesNoPeriod['Reunião Closer']?.count || 0;
     const acd   = stagesNoPeriod['Follow Up Closer']?.count || 0;
 
-    // 6. ATUALIZAÇÃO DOS PARES (ATUAL + HISTÓRICO)[cite: 1]
+    // 6. ATUALIZAÇÃO DOS PARES (Cada cartão agora tem seu histórico)[cite: 1]
     
-    // --- TOPO DO FUNIL ---
+    // TOPO DO FUNIL
     setEl('k-novos', fmtNum(novos));
-    setEl('k-novos-hist', fmtNum(hNovo));   // Par: Novos atual + histórico
-
+    setEl('k-novos-hist', fmtNum(hNovo));   // Histórico específico de Lead Novo
+    
     setEl('k-conv', fmtNum(nowConv));      
-    setEl('k-conv-hist', fmtNum(hConv));    // Par: Conversa atual + histórico
+    setEl('k-conv-hist', fmtNum(hConv));    // Histórico específico de Em Conversa
     
-    // --- TRIAGEM ---
+    // TRIAGEM
     setEl('k-desq', fmtNum(desq));   
-    setEl('k-desq-hist', fmtNum(hDesq));    // Par: Desqualificados atual + histórico
-
+    setEl('k-desq-hist', fmtNum(hDesq));    // Histórico específico de Desqualificados
+    
     setEl('k-qual', fmtNum(nowQual));   
-    setEl('k-qual-hist', fmtNum(hQual));    // Par: Qualificados atual + histórico
+    setEl('k-qual-hist', fmtNum(hQual));    // Histórico específico de Qualificados
     
-    // --- REUNIÃO E FECHAMENTO ---
+    // REUNIÃO E FECHAMENTO
     setEl('k-reu', fmtNum(reu));     
-    setEl('k-reu-hist', fmtNum(hReu));      // Par: Reuniões atual + histórico
-
-    setEl('k-fech', fmtNum(nowFech));   
-    setEl('k-fech-hist', fmtNum(hFech));    // Par: Fechados atual + histórico
+    setEl('k-reu-hist', fmtNum(hReu));      // Histórico específico de Reunião Closer
     
-    // --- ACOMPANHAMENTO ---
+    setEl('k-fech', fmtNum(nowFech));   
+    setEl('k-fech-hist', fmtNum(hFech));    // Histórico específico de Contratos Fechados
+    
+    // ACOMPANHAMENTO
     setEl('k-acd', fmtNum(acd));     
-    setEl('k-acd-hist', fmtNum(hAcd));      // Par: FU Closer atual + histórico
-
+    setEl('k-acd-hist', fmtNum(hAcd));      // Histórico específico de Follow Up Closer
+    
     setEl('k-aca', fmtNum(nowAca));     
-    setEl('k-aca-hist', fmtNum(hAca));      // Par: FU Ativo atual + histórico
+    setEl('k-aca-hist', fmtNum(hAca));      // Histórico específico de Follow Up Ativo
 
-    // 7. Atualização de Porcentagens e Gráficos[cite: 1]
-    setEl('m-conv', `de ${fmtNum(novos)} novos`);   setEl('p-conv', pct(nowConv, novos));
-    setEl('m-qual', `de ${fmtNum(nowConv)} em conversa`); setEl('p-qual', pct(nowQual, nowConv));
-    setEl('m-reu', `de ${fmtNum(nowQual)} qualificados`); setEl('p-reu', pct(reu, nowQual));
-    setEl('m-fech', `de ${fmtNum(reu)} reuniões`);     setEl('p-fech', pct(nowFech, reu));
-
+    // 7. Renderização Visual e Gráficos[cite: 1]
     const allTagTasks = ALL_TAGS.map(t => () => fetchContactsByTag(t.key, range));
     const tagResults = await runSequential(allTagTasks, 300);
     const tagCounts = {};
@@ -973,10 +966,10 @@ async function loadData() {
     document.getElementById('load-area').style.display = 'none';
     document.getElementById('main').style.display = 'block';
 
-    // 8. Timestamps e Rodapé[cite: 1]
-    const nowStr = new Date().toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-    setEl('upd-time', 'Atualizado ' + nowStr);
-    setEl('footer-time', 'Última atualização: ' + nowStr);
+    // 8. Timestamps[cite: 1]
+    const time = new Date().toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    setEl('upd-time', 'Atualizado ' + time);
+    setEl('footer-time', 'Última atualização: ' + time);
 
   } catch (e) {
     console.error(e);
