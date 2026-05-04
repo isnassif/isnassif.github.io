@@ -650,13 +650,13 @@ function fmtHours(hours) {
   if (days < 30) return { val: Math.round(days * 10) / 10, unit: 'd' };
   return { val: Math.round(days / 30 * 10) / 10, unit: 'meses' };
 }
- 
+
 async function fetchAllOpportunities(range) {
   const cacheKey=`opps:${range?range.start+range.end:'all'}`;
   const cached=cacheGet(cacheKey); if(cached){return cached;}
   let all=[], startAfter=null, startAfterId=null;
   while(true){
-    const params={ location_id: LOC, limit:100 };
+    const params={ location_id: LOC, pipeline_id: PID, limit:100 };
     if(startAfter) params.startAfter = startAfter;
     if(startAfterId) params.startAfterId = startAfterId;
 
@@ -673,7 +673,8 @@ async function fetchAllOpportunities(range) {
     await sleep(150);
   }
   cacheSet(cacheKey,all); return all;
-} 
+}
+  
 async function fetchContactsByTag(tag, range) {
   const rangeKey = range ? range.start.slice(0,10)+range.end.slice(0,10) : 'all';
   const cacheKey=`tag:${tag}:${rangeKey}`; const cached=cacheGet(cacheKey); if(cached!==null){return cached;}
