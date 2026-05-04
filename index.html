@@ -809,7 +809,14 @@ function renderFunnelStages(stages, novos, histData) {
   STAGE_NAMES.forEach((name,i)=>{
     const s=stages[name]||{count:0};
     const w=Math.min(100,Math.round(s.count/(novos||1)*100));
-    const hist=histData[i];
+    const histMap = {
+    'Em conversa': histData[1],
+    'Qualificado': histData[2],
+    'Follow Up Ativo': histData[6],
+    'Contrato Fechado': histData[7],
+    };
+
+    const hist = histMap[name];
     const div=document.createElement('div'); div.className='funnel-stage';
     div.innerHTML=`<span class="fs-label">${name}</span><div class="fs-bar-wrap"><div class="fs-bar" style="background:${colors[i]};width:0%" data-w="${w}"></div></div><span class="fs-count">${fmtNum(s.count)}</span><span class="fs-pct">${pct(s.count,novos)}</span><span class="fs-hist">${typeof hist==='number'?fmtNum(hist)+' hist.':'—'}</span>`;
     container.appendChild(div);
@@ -904,7 +911,7 @@ async function loadData() {
     const tagCounts={};
     ALL_TAGS.forEach((t,i)=>{tagCounts[t.key]=tagResults[i];});
 
-    const novos = stagesNoPeriod['Lead Novo']?.count || 0;
+    const novos = tagCounts['etapa:lead-novo'] || 0;
     const conv  = stagesAll['Em conversa']?.count || 0;
     const qual  = stagesAll['Qualificado']?.count || 0;
     const desq  = stagesAll['Desqualificado (triagem)']?.count || 0;
@@ -947,8 +954,8 @@ async function loadData() {
     });
 
     renderTaxaConversaoReal(tagCounts);
-    renderTagFunnel(tagCounts);
-    renderFunnelStages(stagesAll, novos, histData);
+    fetchContactsByTag(t.key, range)
+    renderFunnelStages(stagesNoPeriod, novos, histData);
     renderValorGrid(stagesAll);
     renderChart(stagesAll, histData);
 
