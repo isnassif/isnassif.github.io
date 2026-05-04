@@ -500,8 +500,15 @@ const STAGE_NAMES = [
   'Reunião Closer','Follow Up Closer','Follow Up Ativo','Contrato Fechado'
 ];
  
-const TAGS = { conv:'etapa:em-conversa', qual:'etapa:qualificado', fech:'etapa:contrato-fechado', aca:'etapa:followup-ativo' };
- 
+const TAGS = { 
+  conv: 'etapa:em-conversa', 
+  qual: 'etapa:qualificado', 
+  fech: 'etapa:contrato-fechado', 
+  aca: 'etapa:followup-ativo',
+  desq: 'etapa:desqualificado',
+  reu: 'etapa:reuniao-closer',
+  acd: 'etapa:followup-closer'
+}; 
 const ALL_TAGS = [
   { key:'etapa:lead-novo',        label:'Lead Novo',         color:'#2563eb' },
   { key:'etapa:em-conversa',      label:'Em Conversa',       color:'#3b82f6' },
@@ -602,7 +609,11 @@ function setPeriod(btn) {
   if(period!=='custom') loadData();
 }
  
-function pct(a,b){return b?Math.round(a/b*100)+'%':'—';}
+function pct(atual, historico) {
+  if (!historico || historico === 0) return '0%';
+  const calculo = Math.round((atual / historico) * 100);
+  return calculo + '%';
+}
 function fmtNum(n){return(n===undefined||n===null)?'—':n.toLocaleString('pt-BR');}
 function setEl(id,v){const el=document.getElementById(id);if(el)el.textContent=v;}
 function setBar(id,a,b){const el=document.getElementById(id);if(el)el.style.width=(b?Math.min(100,Math.round(a/b*100)):0)+'%';}
@@ -872,112 +883,114 @@ function renderChart(stages, histData) {
 }
  
 async function loadData() {
+  // Inicializa o estado de carregamento
   document.getElementById('load-area').style.display = 'flex';
-  document.getElementById('load-area').innerHTML = '<div class="spinner"></div><span>Buscando oportunidades...</span>';
   document.getElementById('main').style.display = 'none';
-  document.getElementById('err-area').innerHTML = '';
+  const errArea = document.getElementById('err-area');
+  errArea.innerHTML = '';
 
   try {
     const range = getDateRange();
 
-    // 1. Dados do Período (Cards principais)
+    // 1. Busca oportunidades do período (Posição atual no Pipeline)
+    // Usado para estágios onde o lead "está" agora (como Lead Novo e Desqualificado)
     const oppsNoPeriod = await fetchAllOpportunities(range);
     const stagesNoPeriod = processOpportunities(oppsNoPeriod);
 
-    // 2. Dados do Pipeline (Posição atual no CRM)
-    const oppsAll = await fetchAllOpportunities(null);
-    const stagesAll = processOpportunities(oppsAll);
-
-    document.getElementById('load-area').innerHTML = '<div class="spinner"></div><span>Buscando históricos individuais para cada cartão...</span>';
-
-    // 3. BUSCA DE HISTÓRICOS TOTAIS (Para TODOS os cartões)
-    // Criei uma tarefa para cada histórico de cada cartão da imagem
+    // 2. Busca Histórico Total (Leads que já tiveram a tag em qualquer momento)
+    // Baseado nos IDs de tags que você mapeou nos prints
     const histTasks = [
-      () => fetchContactsByTag('etapa:lead-novo', null),       // Histórico p/ Lead Novo
-      () => fetchContactsByTag(TAGS.conv, null),              // Histórico p/ Em Conversa
-      () => fetchContactsByTag('etapa:desqualificado', null),  // Histórico p/ Desqualificados
-      () => fetchContactsByTag(TAGS.qual, null),              // Histórico p/ Qualificados
-      () => fetchContactsByTag('etapa:reuniao-closer', null),  // Histórico p/ Reunião Closer
-      () => fetchContactsByTag(TAGS.fech, null),              // Histórico p/ Contratos Fechados
-      () => fetchContactsByTag('etapa:followup-closer', null), // Histórico p/ Follow Up Closer
-      () => fetchContactsByTag(TAGS.aca, null),               // Histórico p/ Follow Up Ativo
+      () => fetchContactsByTag('etapa:lead-novo', null),
+      () => fetchContactsByTag(TAGS.conv, null),
+      () => fetchContactsByTag('etapa:desqualificado', null),
+      () => fetchContactsByTag(TAGS.qual, null),
+      () => fetchContactsByTag('etapa:reuniao-closer', null),
+      () => fetchContactsByTag(TAGS.fech, null),
+      () => fetchContactsByTag('etapa:followup-closer', null),
+      () => fetchContactsByTag(TAGS.aca, null),
     ];
-    const [hNovo, hConv, hDesq, hQual, hReu, hFech, hAcd, hAca] = await runSequential(histTasks, 300);
+    
+    // Executa as promessas em sequência com pequeno delay para estabilidade
+    const [hNovo, hConv, hDesq, hQual, hReu, hFech, hAcd, hAca] = await runSequential(histTasks, 200);
 
-    // 4. BUSCA DE ATIVIDADE NO PERÍODO (Somente o que houve no mês)[cite: 1]
+    // 3. Busca Movimentação Específica do Período (Leads que ganharam a tag no intervalo)
     const periodTasks = [
       () => fetchContactsByTag(TAGS.conv, range),
       () => fetchContactsByTag(TAGS.qual, range),
       () => fetchContactsByTag(TAGS.fech, range),
       () => fetchContactsByTag(TAGS.aca, range)
     ];
-    const [nowConv, nowQual, nowFech, nowAca] = await runSequential(periodTasks, 300);
+    const [nowConv, nowQual, nowFech, nowAca] = await runSequential(periodTasks, 200);
 
-    // 5. Variáveis de posicionamento (CRM)[cite: 1]
+    // 4. Mapeamento de variáveis do Pipeline (Posição fixa)
     const novos = stagesNoPeriod['Lead Novo']?.count || 0;
     const desq  = stagesNoPeriod['Desqualificado (triagem)']?.count || 0;
     const reu   = stagesNoPeriod['Reunião Closer']?.count || 0;
     const acd   = stagesNoPeriod['Follow Up Closer']?.count || 0;
 
-    // 6. ATUALIZAÇÃO DOS PARES (Cada cartão agora tem seu histórico)[cite: 1]
-    
+    // --- ATUALIZAÇÃO DA INTERFACE ---
+
     // TOPO DO FUNIL
     setEl('k-novos', fmtNum(novos));
-    setEl('k-novos-hist', fmtNum(hNovo));   // Histórico específico de Lead Novo
-    
+    setEl('m-novos', pct(novos, hNovo)); // % do mês sobre o acumulado total[cite: 1]
+
     setEl('k-conv', fmtNum(nowConv));      
-    setEl('k-conv-hist', fmtNum(hConv));    // Histórico específico de Em Conversa
-    
+    setEl('k-conv-hist', fmtNum(hConv));
+    setEl('p-conv', pct(nowConv, hConv)); // Conversão Real (Tag Período / Tag Histórico)[cite: 1]
+
     // TRIAGEM
     setEl('k-desq', fmtNum(desq));   
-    setEl('k-desq-hist', fmtNum(hDesq));    // Histórico específico de Desqualificados
+    setEl('p-desq', pct(desq, hDesq));
     
     setEl('k-qual', fmtNum(nowQual));   
-    setEl('k-qual-hist', fmtNum(hQual));    // Histórico específico de Qualificados
-    
+    setEl('k-qual-hist', fmtNum(hQual));
+    setEl('p-qual', pct(nowQual, hQual));
+
     // REUNIÃO E FECHAMENTO
     setEl('k-reu', fmtNum(reu));     
-    setEl('k-reu-hist', fmtNum(hReu));      // Histórico específico de Reunião Closer
+    setEl('p-reu', pct(reu, hReu));
     
     setEl('k-fech', fmtNum(nowFech));   
-    setEl('k-fech-hist', fmtNum(hFech));    // Histórico específico de Contratos Fechados
-    
+    setEl('k-fech-hist', fmtNum(hFech));
+    setEl('p-fech', pct(nowFech, hFech));
+
     // ACOMPANHAMENTO
     setEl('k-acd', fmtNum(acd));     
-    setEl('k-acd-hist', fmtNum(hAcd));      // Histórico específico de Follow Up Closer
+    setEl('p-acd', pct(acd, hAcd));
     
     setEl('k-aca', fmtNum(nowAca));     
-    setEl('k-aca-hist', fmtNum(hAca));      // Histórico específico de Follow Up Ativo
+    setEl('k-aca-hist', fmtNum(hAca));
+    setEl('p-aca', pct(nowAca, hAca));
 
-    // 7. Renderização Visual e Gráficos[cite: 1]
-    const allTagTasks = ALL_TAGS.map(t => () => fetchContactsByTag(t.key, range));
-    const tagResults = await runSequential(allTagTasks, 300);
-    const tagCounts = {};
-    ALL_TAGS.forEach((t, i) => { tagCounts[t.key] = tagResults[i]; });
+    // 5. Atualização da Taxa de Conversão Real (Hero Section)
+    const taxaReal = (hNovo > 0) ? ((hFech / hNovo) * 100).toFixed(1) : 0;
+    setEl('tcr-pct', taxaReal + '%');
+    setEl('tcr-sub', `${fmtNum(hFech)} de ${fmtNum(hNovo)} leads`);
+    setEl('tcr-novos', fmtNum(hNovo));
+    setEl('tcr-fech', fmtNum(hFech));
 
-    const histData = [hNovo, hConv, hQual, hDesq, hReu, hAcd, hAca, hFech];
- 
-    renderTaxaConversaoReal(tagCounts);
-    renderTagFunnel(tagCounts);
-    renderFunnelStages(stagesAll, novos, histData);
-    renderValorGrid(stagesAll);
-    renderChart(stagesAll, histData);
+    // 6. Renderização do Funil de Tags (Barras Dinâmicas)
+    renderTagFunnel([
+      { label: 'Lead Novo', count: hNovo },
+      { label: 'Em Conversa', count: hConv },
+      { label: 'Qualificado', count: hQual },
+      { label: 'Contrato Fechado', count: hFech }
+    ]);
 
+    // Finaliza UI
+    const agora = new Date().toLocaleTimeString('pt-BR');
+    setEl('upd-time', 'Atualizado às ' + agora);
+    setEl('footer-time', 'Última sincronização: ' + agora);
+    
     document.getElementById('load-area').style.display = 'none';
     document.getElementById('main').style.display = 'block';
 
-    // 8. Timestamps[cite: 1]
-    const time = new Date().toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
-    setEl('upd-time', 'Atualizado ' + time);
-    setEl('footer-time', 'Última atualização: ' + time);
-
   } catch (e) {
-    console.error(e);
+    console.error("Erro ao carregar dados:", e);
     document.getElementById('load-area').style.display = 'none';
-    document.getElementById('err-area').innerHTML = `<div class="err-box">❌ Erro: ${e.message}</div>`;
+    errArea.innerHTML = `<div class="err-box">❌ <b>Erro na sincronização:</b> ${e.message}</div>`;
   }
-}
-  
+}  
 loadData();
 </script>
 </body>
