@@ -37,11 +37,11 @@ body {
   font-family: 'Plus Jakarta Sans', sans-serif;
   background: var(--bg);
   color: var(--text);
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.5;
   min-height: 100vh;
 }
-.page { max-width: 1400px; margin: 0 auto; padding: 24px 20px 60px; }
+.page { max-width: 1160px; margin: 0 auto; padding: 24px 20px 60px; }
 .header {
   display: flex; align-items: center; justify-content: space-between;
   flex-wrap: wrap; gap: 12px; margin-bottom: 24px;
@@ -123,23 +123,22 @@ body {
 .tcr-row-val { font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 600; }
 .tcr-row-val.blue { color: var(--blue); }
 .tcr-row-val.green { color: var(--green); }
+.tcr-hint { font-size: 11px; color: var(--text3); padding: 8px 0 0; border-top: 1px solid var(--border); }
 @media (max-width: 640px) { .tcr-hero-inner { grid-template-columns: 1fr; } .tcr-left { padding: 24px; } .tcr-number { font-size: 56px; } }
-.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(165px, 1fr)); gap: 10px; }
 .kpi {
   background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-lg);
-  padding: 16px 18px; box-shadow: var(--shadow); position: relative; overflow: hidden;
+  padding: 18px 20px; box-shadow: var(--shadow); position: relative; overflow: hidden;
   transition: box-shadow .2s, transform .2s;
 }
 .kpi:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
 .kpi-accent { position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: 3px 3px 0 0; }
-.kpi-label { font-size: 11px; color: var(--text2); font-weight: 500; margin-bottom: 8px; line-height: 1.3; }
-.kpi-val-row { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
-.kpi-val { font-size: 28px; font-weight: 800; color: var(--text); line-height: 1; letter-spacing: -1px; }
-.kpi-val-hist { font-size: 14px; font-weight: 500; color: var(--text3); }
-.kpi-meta { font-size: 10px; color: var(--text3); margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
+.kpi-label { font-size: 11px; color: var(--text2); font-weight: 500; margin-bottom: 10px; line-height: 1.4; }
+.kpi-val { font-size: 34px; font-weight: 800; color: var(--text); line-height: 1; letter-spacing: -1px; }
+.kpi-meta { font-size: 11px; color: var(--text3); margin-top: 6px; font-family: 'JetBrains Mono', monospace; }
 .badge {
-  display: inline-flex; align-items: center; font-size: 10px; font-weight: 600;
-  font-family: 'JetBrains Mono', monospace; padding: 3px 8px; border-radius: 5px; margin-top: 8px;
+  display: inline-flex; align-items: center; font-size: 11px; font-weight: 600;
+  font-family: 'JetBrains Mono', monospace; padding: 3px 8px; border-radius: 6px; margin-top: 8px;
 }
 .badge-blue   { background: var(--blue-light);   color: var(--blue); }
 .badge-green  { background: var(--green-light);  color: var(--green); }
@@ -153,8 +152,8 @@ body {
 }
 .funnel-hint { font-size: 12px; color: var(--text3); margin-bottom: 20px; }
 .tag-funnel-row {
-  display: grid; grid-template-columns: 180px 1fr 80px 70px 70px;
-  align-items: center; gap: 12px; padding: 9px 0;
+  display: grid; grid-template-columns: 180px 1fr 70px 60px;
+  align-items: center; gap: 14px; padding: 9px 0;
   border-bottom: 1px solid var(--border);
 }
 .tag-funnel-row:last-child { border-bottom: none; }
@@ -162,19 +161,17 @@ body {
 .tf-bar-wrap { height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden; border: 1px solid var(--border); }
 .tf-bar { height: 100%; border-radius: 4px; transition: width .7s cubic-bezier(.4,0,.2,1); }
 .tf-count { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: var(--text); text-align: right; }
-.tf-hist { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text3); text-align: right; }
-.tf-pct-hist { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text2); text-align: right; background: var(--bg); padding: 2px 6px; border-radius: 4px; }
-@media (max-width: 700px) { .tag-funnel-row { grid-template-columns: 130px 1fr 60px; } .tf-hist, .tf-pct-hist { display: none; } }
+.tf-pct { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text3); text-align: right; }
+@media (max-width: 600px) { .tag-funnel-row { grid-template-columns: 130px 1fr 50px; } .tf-pct { display: none; } }
 .funnel-wrap { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; box-shadow: var(--shadow); }
-.funnel-stages { display: flex; flex-direction: column; gap: 2px; }
 .funnel-stage { display: flex; align-items: center; gap: 14px; padding: 9px 12px; border-radius: var(--radius); transition: background .15s; }
 .funnel-stage:hover { background: var(--bg); }
-.fs-label { font-size: 12px; color: var(--text2); width: 180px; flex-shrink: 0; }
+.fs-label { font-size: 12px; color: var(--text2); width: 200px; flex-shrink: 0; }
 .fs-bar-wrap { flex: 1; height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden; border: 1px solid var(--border); }
 .fs-bar { height: 100%; border-radius: 4px; transition: width .7s cubic-bezier(.4,0,.2,1); }
-.fs-count { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: var(--text); width: 50px; text-align: right; flex-shrink: 0; }
-.fs-pct { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text3); width: 50px; text-align: right; flex-shrink: 0; }
-.fs-hist { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text2); width: 100px; text-align: right; flex-shrink: 0; background: var(--bg); padding: 2px 6px; border-radius: 4px; margin-left: 4px; }
+.fs-count { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: var(--text); width: 40px; text-align: right; flex-shrink: 0; }
+.fs-pct { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text3); width: 46px; text-align: right; flex-shrink: 0; }
+.fs-hist { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text3); width: 90px; text-align: right; flex-shrink: 0; }
 .chart-box { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow); }
 .chart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
 .chart-title { font-size: 14px; font-weight: 700; }
@@ -182,24 +179,24 @@ body {
 .legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text2); }
 .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
 .chart-wrap { position: relative; width: 100%; height: 260px; }
-.rate-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
-.rate-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 14px 16px; box-shadow: var(--shadow); }
+.rate-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+.rate-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 18px; box-shadow: var(--shadow); }
 .rate-card.highlight { background: var(--green-light); border-color: var(--green-mid); }
-.rate-label { font-size: 11px; color: var(--text2); margin-bottom: 6px; font-weight: 500; }
+.rate-label { font-size: 11px; color: var(--text2); margin-bottom: 8px; font-weight: 500; }
 .rate-card.highlight .rate-label { color: var(--green); }
-.rate-val { font-size: 24px; font-weight: 800; color: var(--text); line-height: 1; letter-spacing: -1px; }
+.rate-val { font-size: 28px; font-weight: 800; color: var(--text); line-height: 1; letter-spacing: -1px; }
 .rate-card.highlight .rate-val { color: var(--green); }
-.rate-sub { font-size: 10px; color: var(--text3); margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
+.rate-sub { font-size: 11px; color: var(--text3); margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
 .bar-track { width: 100%; height: 4px; background: var(--bg); border-radius: 2px; margin-top: 10px; border: 1px solid var(--border); }
 .bar-fill { height: 4px; border-radius: 2px; transition: width .5s cubic-bezier(.4,0,.2,1); }
-.valor-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
-.valor-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 14px 16px; box-shadow: var(--shadow); }
-.valor-label { font-size: 11px; color: var(--text2); margin-bottom: 4px; font-weight: 500; }
-.valor-val { font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 600; color: var(--green); }
-.time-stages-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.valor-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+.valor-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 18px; box-shadow: var(--shadow); }
+.valor-label { font-size: 11px; color: var(--text2); margin-bottom: 6px; font-weight: 500; }
+.valor-val { font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 600; color: var(--green); }
+.time-stages-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
 .time-stage-card {
   background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-lg);
-  padding: 16px 18px; box-shadow: var(--shadow); position: relative; overflow: hidden;
+  padding: 18px 20px; box-shadow: var(--shadow); position: relative; overflow: hidden;
 }
 .time-stage-card .kpi-accent { position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: 3px 3px 0 0; }
 .time-stage-arrow {
@@ -207,27 +204,27 @@ body {
   text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; gap: 5px;
 }
 .time-stage-val {
-  font-family: 'JetBrains Mono', monospace; font-size: 24px; font-weight: 700;
+  font-family: 'JetBrains Mono', monospace; font-size: 28px; font-weight: 700;
   color: var(--text); line-height: 1; letter-spacing: -1px;
 }
-.time-stage-unit { font-size: 12px; font-weight: 500; color: var(--text3); margin-left: 3px; }
-.time-stage-sub { font-size: 10px; color: var(--text3); margin-top: 6px; }
+.time-stage-unit { font-size: 13px; font-weight: 500; color: var(--text3); margin-left: 3px; }
+.time-stage-sub { font-size: 11px; color: var(--text3); margin-top: 6px; }
 .time-stage-badge {
   display: inline-flex; align-items: center; font-size: 10px; font-weight: 600;
   font-family: 'JetBrains Mono', monospace; padding: 2px 7px; border-radius: 5px;
   margin-top: 8px; background: var(--bg); color: var(--text3); border: 1px solid var(--border);
 }
-.time-stage-nodata { font-size: 11px; color: var(--text3); font-style: italic; margin-top: 6px; }
+.time-stage-nodata { font-size: 12px; color: var(--text3); font-style: italic; margin-top: 4px; }
 .state-box { display: flex; align-items: center; justify-content: center; min-height: 240px; flex-direction: column; gap: 14px; color: var(--text3); font-size: 13px; }
 .spinner { width: 28px; height: 28px; border: 2px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin .7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .err-box { background: var(--red-light); border: 1px solid #fecaca; color: var(--red); border-radius: var(--radius); padding: 14px 18px; font-size: 13px; margin-bottom: 16px; line-height: 1.6; }
 .divider { height: 1px; background: var(--border); margin: 28px 0; }
 .footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 11px; color: var(--text3); font-family: 'JetBrains Mono', monospace; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
-@media (max-width: 680px) {
+@media (max-width: 600px) {
   .fs-label { width: 110px; font-size: 11px; }
-  .fs-hist { width: 70px; font-size: 9px; }
-  .kpi-val { font-size: 22px; }
+  .fs-hist { display: none; }
+  .kpi-val { font-size: 26px; }
 }
 </style>
 </head>
@@ -320,16 +317,23 @@ body {
       <div class="kpi">
         <div class="kpi-accent" style="background:var(--blue)"></div>
         <div class="kpi-label">Lead Novo — entradas no período</div>
-        <div class="kpi-val-row"><div class="kpi-val" id="k-novos">—</div><div class="kpi-val-hist" id="k-novos-hist"></div></div>
+        <div class="kpi-val" id="k-novos">—</div>
         <div class="kpi-meta">ponto de entrada</div>
-        <span class="badge badge-blue" id="p-novos">100%</span>
+        <span class="badge badge-blue">100%</span>
       </div>
       <div class="kpi">
         <div class="kpi-accent" style="background:var(--blue)"></div>
         <div class="kpi-label">Em Conversa — atual</div>
-        <div class="kpi-val-row"><div class="kpi-val" id="k-conv">—</div><div class="kpi-val-hist" id="k-conv-hist"></div></div>
+        <div class="kpi-val" id="k-conv">—</div>
         <div class="kpi-meta" id="m-conv">—</div>
         <span class="badge badge-blue" id="p-conv">—</span>
+      </div>
+      <div class="kpi">
+        <div class="kpi-accent" style="background:var(--border2)"></div>
+        <div class="kpi-label">Histórico: já tocaram Em Conversa</div>
+        <div class="kpi-val" id="k-conv-hist">—</div>
+        <div class="kpi-meta">todos os tempos via tag</div>
+        <span class="badge badge-gray">histórico</span>
       </div>
     </div>
  
@@ -338,16 +342,23 @@ body {
       <div class="kpi">
         <div class="kpi-accent" style="background:var(--red)"></div>
         <div class="kpi-label">Desqualificados — atual</div>
-        <div class="kpi-val-row"><div class="kpi-val" id="k-desq">—</div><div class="kpi-val-hist" id="k-desq-hist"></div></div>
+        <div class="kpi-val" id="k-desq">—</div>
         <div class="kpi-meta" id="m-desq">—</div>
         <span class="badge badge-red" id="p-desq">—</span>
       </div>
       <div class="kpi">
         <div class="kpi-accent" style="background:var(--green)"></div>
         <div class="kpi-label">Qualificados — atual</div>
-        <div class="kpi-val-row"><div class="kpi-val" id="k-qual">—</div><div class="kpi-val-hist" id="k-qual-hist"></div></div>
+        <div class="kpi-val" id="k-qual">—</div>
         <div class="kpi-meta" id="m-qual">—</div>
         <span class="badge badge-green" id="p-qual">—</span>
+      </div>
+      <div class="kpi">
+        <div class="kpi-accent" style="background:var(--border2)"></div>
+        <div class="kpi-label">Histórico: já foram Qualificados</div>
+        <div class="kpi-val" id="k-qual-hist">—</div>
+        <div class="kpi-meta">todos os tempos via tag</div>
+        <span class="badge badge-gray">histórico</span>
       </div>
     </div>
  
@@ -356,16 +367,23 @@ body {
       <div class="kpi">
         <div class="kpi-accent" style="background:var(--purple)"></div>
         <div class="kpi-label">Reunião Closer — atual</div>
-        <div class="kpi-val-row"><div class="kpi-val" id="k-reu">—</div><div class="kpi-val-hist" id="k-reu-hist"></div></div>
+        <div class="kpi-val" id="k-reu">—</div>
         <div class="kpi-meta" id="m-reu">—</div>
         <span class="badge badge-purple" id="p-reu">—</span>
       </div>
       <div class="kpi">
         <div class="kpi-accent" style="background:var(--green)"></div>
         <div class="kpi-label">Contratos Fechados — atual</div>
-        <div class="kpi-val-row"><div class="kpi-val" id="k-fech">—</div><div class="kpi-val-hist" id="k-fech-hist"></div></div>
+        <div class="kpi-val" id="k-fech">—</div>
         <div class="kpi-meta" id="m-fech">—</div>
         <span class="badge badge-green" id="p-fech">—</span>
+      </div>
+      <div class="kpi">
+        <div class="kpi-accent" style="background:var(--border2)"></div>
+        <div class="kpi-label">Histórico: já fecharam contrato</div>
+        <div class="kpi-val" id="k-fech-hist">—</div>
+        <div class="kpi-meta">todos os tempos via tag</div>
+        <span class="badge badge-gray">histórico</span>
       </div>
     </div>
  
@@ -374,16 +392,23 @@ body {
       <div class="kpi">
         <div class="kpi-accent" style="background:var(--amber)"></div>
         <div class="kpi-label">Follow Up Closer — atual</div>
-        <div class="kpi-val-row"><div class="kpi-val" id="k-acd">—</div><div class="kpi-val-hist" id="k-acd-hist"></div></div>
+        <div class="kpi-val" id="k-acd">—</div>
         <div class="kpi-meta" id="m-acd">—</div>
         <span class="badge badge-amber" id="p-acd">—</span>
       </div>
       <div class="kpi">
         <div class="kpi-accent" style="background:var(--amber)"></div>
         <div class="kpi-label">Follow Up Ativo — atual</div>
-        <div class="kpi-val-row"><div class="kpi-val" id="k-aca">—</div><div class="kpi-val-hist" id="k-aca-hist"></div></div>
+        <div class="kpi-val" id="k-aca">—</div>
         <div class="kpi-meta" id="m-aca">—</div>
         <span class="badge badge-amber" id="p-aca">—</span>
+      </div>
+      <div class="kpi">
+        <div class="kpi-accent" style="background:var(--border2)"></div>
+        <div class="kpi-label">Histórico: já foram Follow Up Ativo</div>
+        <div class="kpi-val" id="k-aca-hist">—</div>
+        <div class="kpi-meta">todos os tempos via tag</div>
+        <span class="badge badge-gray">histórico</span>
       </div>
     </div>
  
@@ -391,11 +416,11 @@ body {
  
     <div class="section-title">Funil completo — pipeline atual vs histórico</div>
     <div class="funnel-wrap">
-      <div style="display:flex;align-items:center;gap:20px;margin-bottom:16px;flex-wrap:wrap;">
-        <span style="font-size:11px;color:var(--text3)">Pipeline atual (período) &nbsp;|&nbsp; Histórico via tag (todos os tempos)</span>
-        <span style="font-size:11px;color:var(--text3);margin-left:auto">% do total de leads novos (atual)</span>
+      <div style="display:flex;align-items:center;gap:20px;margin-bottom:14px;flex-wrap:wrap;">
+        <span style="font-size:11px;color:var(--text3)">Pipeline atual &nbsp;|&nbsp; Histórico via tag (todos os tempos)</span>
+        <span style="font-size:11px;color:var(--text3);margin-left:auto">% do total de leads novos</span>
       </div>
-      <div id="funnel-stages"></div>
+      <div class="funnel-stages" id="funnel-stages"></div>
     </div>
  
     <div class="divider"></div>
@@ -419,8 +444,8 @@ body {
       <div class="chart-header">
         <span class="chart-title">Leads por etapa</span>
         <div class="chart-legend">
-          <span class="legend-item"><span class="legend-dot" style="background:var(--blue)"></span>Pipeline atual (período)</span>
-          <span class="legend-item"><span class="legend-dot" style="background:var(--border2)"></span>Histórico (tag - todos os tempos)</span>
+          <span class="legend-item"><span class="legend-dot" style="background:var(--blue)"></span>Pipeline atual</span>
+          <span class="legend-item"><span class="legend-dot" style="background:var(--border2)"></span>Histórico (tag)</span>
         </div>
       </div>
       <div class="chart-wrap"><canvas id="chart-funil"></canvas></div>
@@ -441,7 +466,7 @@ body {
  
     <div class="divider"></div>
  
-    <div class="section-title">Valor R$ por etapa (período)</div>
+    <div class="section-title">Valor R$ por etapa</div>
     <div class="valor-grid" id="valor-grid"></div>
  
     <div class="footer">
@@ -457,6 +482,7 @@ const PID = 'XEkSWuSVzEpyyDhA1IAi';
 const GHL_TOKEN = 'pit-e577b0d3-9d68-4b58-8beb-d070bfcceea8';
 const API = 'https://services.leadconnectorhq.com';
  
+// ── FIX 1: Mapeamento por ID real (obtido da API /opportunities/pipelines)
 const STAGE_ID_MAP = {
   'f2843943-4f6f-471f-bd61-9118565d72be': 'Lead Novo',
   '33f55bb5-bdfd-4f7b-9d65-b0b6a1a122a2': 'Em conversa',
@@ -468,6 +494,7 @@ const STAGE_ID_MAP = {
   '8b828613-2d6a-4712-ac5d-dbc2e216fb26': 'Contrato Fechado',
 };
  
+// ── FIX 2: Nomes corrigidos para bater com o GHL
 const STAGE_NAMES = [
   'Lead Novo','Em conversa','Qualificado','Desqualificado (triagem)',
   'Reunião Closer','Follow Up Closer','Follow Up Ativo','Contrato Fechado'
@@ -493,7 +520,6 @@ const STAGE_TRANSITIONS = [
   { from: 'qualificado',     to: 'reuniao-closer',    label: 'Qualificado → Reunião Closer',  color: '#7c3aed' },
   { from: 'reuniao-closer',  to: 'contrato-fechado',  label: 'Reunião → Contrato Fechado',    color: '#059669' },
   { from: 'reuniao-closer',  to: 'followup-ativo',    label: 'Reunião → Follow Up Ativo',     color: '#d97706' },
-  { from: 'followup-ativo',  to: 'contrato-fechado',  label: 'Follow Up Ativo → Contrato',    color: '#06b6d4' },
   { from: 'lead-novo',       to: 'contrato-fechado',  label: 'Lead Novo → Contrato (total)',  color: '#059669' },
 ];
  
@@ -576,7 +602,7 @@ function setPeriod(btn) {
   if(period!=='custom') loadData();
 }
  
-function pct(a,b){return b?Math.round(a/b*100)+'%':'0%';}
+function pct(a,b){return b?Math.round(a/b*100)+'%':'—';}
 function fmtNum(n){return(n===undefined||n===null)?'—':n.toLocaleString('pt-BR');}
 function setEl(id,v){const el=document.getElementById(id);if(el)el.textContent=v;}
 function setBar(id,a,b){const el=document.getElementById(id);if(el)el.style.width=(b?Math.min(100,Math.round(a/b*100)):0)+'%';}
@@ -668,7 +694,7 @@ function parseNoteStage(noteBody) {
 }
  
 async function calcTimeBetweenStages(updateStatus) {
-  const cacheKey = `transitions:all`;
+  const cacheKey = `transitions:${period}`;
   const cached = cacheGet(cacheKey); if(cached) return cached;
   updateStatus('Buscando contatos para análise de tempo...');
   let allContacts = [], startAfter = null, startAfterId = null;
@@ -740,12 +766,11 @@ function renderTimeBetweenStages(transitionData) {
     const data = transitionData[key];
     const card = document.createElement('div');
     card.className = 'time-stage-card';
-    if (!data || data.count === 0) {
+    if (!data) {
       card.innerHTML = `
         <div class="kpi-accent" style="background:${transition.color}"></div>
         <div class="time-stage-arrow">${transition.label}</div>
-        <div class="time-stage-nodata">Dados insuficientes — as automações precisam acumular histórico.</div>
-        <div class="time-stage-sub">Nenhum lead com esta transição registrada</div>`;
+        <div class="time-stage-nodata">Dados insuficientes — as automações precisam acumular histórico.</div>`;
     } else {
       const avg = fmtHours(data.avg);
       const minH = fmtHours(data.min);
@@ -761,10 +786,12 @@ function renderTimeBetweenStages(transitionData) {
   });
 }
  
+// ── FIX PRINCIPAL: usa pipelineStageId para mapear o nome da etapa
 function processOpportunities(opps) {
   const stages={};
   STAGE_NAMES.forEach(n=>{stages[n]={count:0,value:0};});
   opps.forEach(op=>{
+    // Tenta pelo ID primeiro (mais confiável), depois pelo nome como fallback
     const stageId = op.pipelineStageId || op.pipelineStageUId || '';
     const stageByName = op.pipelineStage?.name || op.stageName || '';
     const mappedById = STAGE_ID_MAP[stageId];
@@ -776,22 +803,15 @@ function processOpportunities(opps) {
   return stages;
 }
  
-function renderFunnelStages(stages, novos, histData, tagCounts) {
+function renderFunnelStages(stages, novos, histData) {
   const colors=['#2563eb','#3b82f6','#059669','#dc2626','#7c3aed','#d97706','#f59e0b','#059669'];
   const container=document.getElementById('funnel-stages'); container.innerHTML='';
   STAGE_NAMES.forEach((name,i)=>{
     const s=stages[name]||{count:0};
     const w=Math.min(100,Math.round(s.count/(novos||1)*100));
-    const histValue = histData[i] || 0;
-    const histTag = tagCounts[ALL_TAGS[i]?.key] || 0;
-    const pctVsHist = histTag ? Math.round(s.count / histTag * 100) + '%' : '0%';
-    
+    const hist=histData[i];
     const div=document.createElement('div'); div.className='funnel-stage';
-    div.innerHTML=`<span class="fs-label">${name}</span>
-      <div class="fs-bar-wrap"><div class="fs-bar" style="background:${colors[i]};width:0%" data-w="${w}"></div></div>
-      <span class="fs-count">${fmtNum(s.count)}</span>
-      <span class="fs-pct">${pct(s.count,novos)}</span>
-      <span class="fs-hist">📊 ${fmtNum(histTag)} hist. | ${pctVsHist} do total</span>`;
+    div.innerHTML=`<span class="fs-label">${name}</span><div class="fs-bar-wrap"><div class="fs-bar" style="background:${colors[i]};width:0%" data-w="${w}"></div></div><span class="fs-count">${fmtNum(s.count)}</span><span class="fs-pct">${pct(s.count,novos)}</span><span class="fs-hist">${typeof hist==='number'?fmtNum(hist)+' hist.':'—'}</span>`;
     container.appendChild(div);
   });
   requestAnimationFrame(()=>{ document.querySelectorAll('.fs-bar[data-w]').forEach(el=>{el.style.width=el.dataset.w+'%';}); });
@@ -800,16 +820,13 @@ function renderFunnelStages(stages, novos, histData, tagCounts) {
 function renderTagFunnel(tagCounts) {
   const container=document.getElementById('tag-funnel-stages'); container.innerHTML='';
   const max=Math.max(...Object.values(tagCounts),1);
-  const base=tc=>tc > 0 ? tc : 1;
+  const base=tagCounts['etapa:lead-novo']||1;
   ALL_TAGS.forEach(({key,label,color})=>{
     const count=tagCounts[key]||0;
     const w=Math.round(count/max*100);
+    const pctVal=Math.round(count/base*100)+'%';
     const div=document.createElement('div'); div.className='tag-funnel-row';
-    div.innerHTML=`<span class="tf-label">${label}</span>
-      <div class="tf-bar-wrap"><div class="tf-bar" style="background:${color};width:0%" data-w="${w}"></div></div>
-      <span class="tf-count">${fmtNum(count)}</span>
-      <span class="tf-hist">${key.includes('lead-novo') ? '100%' : pct(count, tagCounts['etapa:lead-novo'])}</span>
-      <span class="tf-pct-hist">${key===ALL_TAGS[0].key ? '100%' : pct(count, tagCounts['etapa:lead-novo'])}</span>`;
+    div.innerHTML=`<span class="tf-label">${label}</span><div class="tf-bar-wrap"><div class="tf-bar" style="background:${color};width:0%" data-w="${w}"></div></div><span class="tf-count">${fmtNum(count)}</span><span class="tf-pct">${pctVal}</span>`;
     container.appendChild(div);
   });
   requestAnimationFrame(()=>{ document.querySelectorAll('.tf-bar[data-w]').forEach(el=>{el.style.width=el.dataset.w+'%';}); });
@@ -832,22 +849,22 @@ function renderValorGrid(stages) {
   });
 }
  
-function renderChart(stages, histTagCounts) {
+function renderChart(stages, histData) {
   const labels=STAGE_NAMES.map(n=>n.length>14?n.slice(0,14)+'…':n);
   const current=STAGE_NAMES.map(n=>(stages[n]||{}).count||0);
-  const histTags=ALL_TAGS.map(tag=>histTagCounts[tag.key]||0);
+  const hist=histData.map(v=>typeof v==='number'?v:0);
   if(chartInstance) chartInstance.destroy();
   chartInstance=new Chart(document.getElementById('chart-funil'),{
     type:'bar',
     data:{labels,datasets:[
-      {label:'Pipeline atual (período)',data:current,backgroundColor:'rgba(37,99,235,0.75)',borderRadius:5},
-      {label:'Histórico (tag - todos os tempos)',data:histTags,backgroundColor:'rgba(209,213,219,0.7)',borderRadius:5}
+      {label:'Pipeline atual',data:current,backgroundColor:'rgba(37,99,235,0.75)',borderRadius:5},
+      {label:'Histórico (tag)',data:hist,backgroundColor:'rgba(209,213,219,0.7)',borderRadius:5}
     ]},
     options:{
       responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{backgroundColor:'#fff',borderColor:'#e5e7eb',borderWidth:1,titleColor:'#111827',bodyColor:'#6b7280',callbacks:{label:ctx=>' '+ctx.raw+' leads'}}},
+      plugins:{legend:{display:false},tooltip:{backgroundColor:'#fff',borderColor:'#e5e7eb',borderWidth:1,titleColor:'#111827',bodyColor:'#6b7280',callbacks:{label:ctx=>' '+ctx.parsed.y+' leads'}}},
       scales:{
-        x:{ticks:{color:'#9ca3af',font:{size:10,family:'JetBrains Mono'},rotate:45,autoSkip:true,maxRotation:45,minRotation:45},grid:{color:'rgba(0,0,0,.04)'}},
+        x:{ticks:{color:'#9ca3af',font:{size:10,family:'JetBrains Mono'}},grid:{color:'rgba(0,0,0,.04)'}},
         y:{ticks:{color:'#9ca3af',font:{size:10,family:'JetBrains Mono'}},grid:{color:'rgba(0,0,0,.04)'}}
       }
     }
@@ -872,35 +889,20 @@ async function loadData() {
  
     document.getElementById('load-area').innerHTML='<div class="spinner"></div><span>Buscando histórico via tags...</span>';
  
-    const histTasksPeriod=[
-      ()=>fetchContactsByTag(TAGS.conv, range),
-      ()=>fetchContactsByTag(TAGS.qual, range),
-      ()=>fetchContactsByTag(TAGS.fech, range),
-      ()=>fetchContactsByTag(TAGS.aca,  range),
-    ];
-    const histTasksAll=[
+    const histTasks=[
       ()=>fetchContactsByTag(TAGS.conv, null),
       ()=>fetchContactsByTag(TAGS.qual, null),
       ()=>fetchContactsByTag(TAGS.fech, null),
       ()=>fetchContactsByTag(TAGS.aca,  null),
     ];
-    
-    const [periodConv, periodQual, periodFech, periodAca] = await runSequential(histTasksPeriod, 300);
-    const [allConv, allQual, allFech, allAca] = await runSequential(histTasksAll, 300);
-    
-    const histDataPeriod = [null, periodConv, periodQual, null, null, null, periodAca, periodFech];
-    const histDataAll = [null, allConv, allQual, null, null, null, allAca, allFech];
+    const [histConv,histQual,histFech,histAca]=await runSequential(histTasks,300);
+    const histData=[null,histConv,histQual,null,null,null,histAca,histFech];
  
     document.getElementById('load-area').innerHTML='<div class="spinner"></div><span>Calculando funil real por tag...</span>';
     const allTagTasks=ALL_TAGS.map(t=>()=>fetchContactsByTag(t.key, range));
     const tagResults=await runSequential(allTagTasks,300);
     const tagCounts={};
     ALL_TAGS.forEach((t,i)=>{tagCounts[t.key]=tagResults[i];});
-    
-    const allTagTasksAll=ALL_TAGS.map(t=>()=>fetchContactsByTag(t.key, null));
-    const tagResultsAll=await runSequential(allTagTasksAll,300);
-    const tagCountsAll={};
-    ALL_TAGS.forEach((t,i)=>{tagCountsAll[t.key]=tagResultsAll[i];});
  
     const novos = stagesNoPeriod['Lead Novo']?.count || 0;
     const conv  = stagesAll['Em conversa']?.count || 0;
@@ -910,40 +912,23 @@ async function loadData() {
     const fech  = stagesAll['Contrato Fechado']?.count || 0;
     const acd   = stagesAll['Follow Up Closer']?.count || 0;
     const aca   = stagesAll['Follow Up Ativo']?.count || 0;
-    
-    const histNovos = tagCountsAll['etapa:lead-novo'] || 0;
-    const histConvAll = allConv;
-    const histQualAll = allQual;
-    const histReuAll = tagCountsAll['etapa:reuniao-closer'] || 0;
-    const histFechAll = allFech;
-    const histAcdAll = tagCountsAll['etapa:followup-closer'] || 0;
-    const histAcaAll = allAca;
  
-    setEl('k-novos',fmtNum(novos)); setEl('k-novos-hist',`hist: ${fmtNum(histNovos)}`);
-    setEl('k-conv',fmtNum(conv)); setEl('k-conv-hist',`hist: ${fmtNum(histConvAll)}`); 
-    setEl('m-conv',`de ${fmtNum(novos)} leads novos`); setEl('p-conv',pct(conv,novos));
-    
-    setEl('k-desq',fmtNum(desq)); setEl('k-desq-hist',`hist: ${fmtNum(0)}`);
-    setEl('m-desq',`de ${fmtNum(conv)} em conversa`); setEl('p-desq',pct(desq,conv));
-    
-    setEl('k-qual',fmtNum(qual)); setEl('k-qual-hist',`hist: ${fmtNum(histQualAll)}`);
-    setEl('m-qual',`de ${fmtNum(conv)} em conversa`); setEl('p-qual',pct(qual,conv));
-    
-    setEl('k-reu',fmtNum(reu)); setEl('k-reu-hist',`hist: ${fmtNum(histReuAll)}`);
-    setEl('m-reu',`de ${fmtNum(qual)} qualificados`); setEl('p-reu',pct(reu,qual));
-    
-    setEl('k-fech',fmtNum(fech)); setEl('k-fech-hist',`hist: ${fmtNum(histFechAll)}`);
-    setEl('m-fech',`de ${fmtNum(reu)} reuniões`); setEl('p-fech',pct(fech,reu));
-    
-    setEl('k-acd',fmtNum(acd)); setEl('k-acd-hist',`hist: ${fmtNum(histAcdAll)}`);
-    setEl('m-acd',`de ${fmtNum(reu)} reuniões`); setEl('p-acd',pct(acd,reu));
-    
-    setEl('k-aca',fmtNum(aca)); setEl('k-aca-hist',`hist: ${fmtNum(histAcaAll)}`);
-    setEl('m-aca',`de ${fmtNum(reu)} reuniões`); setEl('p-aca',pct(aca,reu));
+    setEl('k-novos',fmtNum(novos));
+    setEl('k-conv',fmtNum(conv));   setEl('m-conv',`de ${fmtNum(novos)} leads novos`);   setEl('p-conv',pct(conv,novos));
+    setEl('k-conv-hist',fmtNum(histConv));
+    setEl('k-desq',fmtNum(desq));   setEl('m-desq',`de ${fmtNum(conv)} em conversa`);    setEl('p-desq',pct(desq,conv));
+    setEl('k-qual',fmtNum(qual));   setEl('m-qual',`de ${fmtNum(conv)} em conversa`);    setEl('p-qual',pct(qual,conv));
+    setEl('k-qual-hist',fmtNum(histQual));
+    setEl('k-reu',fmtNum(reu));     setEl('m-reu',`de ${fmtNum(qual)} qualificados`);    setEl('p-reu',pct(reu,qual));
+    setEl('k-fech',fmtNum(fech));   setEl('m-fech',`de ${fmtNum(reu)} reuniões`);        setEl('p-fech',pct(fech,reu));
+    setEl('k-fech-hist',fmtNum(histFech));
+    setEl('k-acd',fmtNum(acd));     setEl('m-acd',`de ${fmtNum(reu)} reuniões`);         setEl('p-acd',pct(acd,reu));
+    setEl('k-aca',fmtNum(aca));     setEl('m-aca',`de ${fmtNum(reu)} reuniões`);         setEl('p-aca',pct(aca,reu));
+    setEl('k-aca-hist',fmtNum(histAca));
  
     const ratesData=[
       [conv,novos],[qual,conv],[desq,conv],[reu,qual],
-      [fech,reu],[aca,reu],[allFech,allAca],[fech,novos]
+      [fech,reu],[aca,reu],[histFech,histAca],[fech,novos]
     ];
     const rateSubs=[
       `${fmtNum(conv)} de ${fmtNum(novos)}`,
@@ -952,7 +937,7 @@ async function loadData() {
       `${fmtNum(reu)} de ${fmtNum(qual)}`,
       `${fmtNum(fech)} de ${fmtNum(reu)}`,
       `${fmtNum(aca)} de ${fmtNum(reu)}`,
-      `${fmtNum(allFech)} de ${fmtNum(allAca)} (histórico)`,
+      `${fmtNum(histFech)} de ${fmtNum(histAca)} (histórico)`,
       `${fmtNum(fech)} de ${fmtNum(novos)}`
     ];
     ratesData.forEach(([a,b],i)=>{
@@ -961,11 +946,11 @@ async function loadData() {
       setBar(`bar${i+1}`,a,b);
     });
  
-    renderTaxaConversaoReal(tagCountsAll);
+    renderTaxaConversaoReal(tagCounts);
     renderTagFunnel(tagCounts);
-    renderFunnelStages(stagesAll, novos, histDataAll, tagCounts);
+    renderFunnelStages(stagesAll, novos, histData);
     renderValorGrid(stagesAll);
-    renderChart(stagesAll, tagCountsAll);
+    renderChart(stagesAll, histData);
  
     document.getElementById('load-area').style.display='none';
     document.getElementById('main').style.display='block';
