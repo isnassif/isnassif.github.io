@@ -805,33 +805,18 @@ function processOpportunities(opps) {
  
 function renderFunnelStages(stages, novos, histData) {
   const colors=['#2563eb','#3b82f6','#059669','#dc2626','#7c3aed','#d97706','#f59e0b','#059669'];
-  const container=document.getElementById('funnel-stages'); 
-  container.innerHTML='';
-  
-  STAGE_NAMES.forEach((name, i) => {
-    const s = stages[name] || {count:0};
-    const w = Math.min(100, Math.round(s.count / (novos || 1) * 100));
-    // Agora pegamos o valor exato da posição i do nosso novo array de históricos
-    const hist = histData[i]; 
-    
-    const div = document.createElement('div'); 
-    div.className = 'funnel-stage';
-    div.innerHTML = `
-      <span class="fs-label">${name}</span>
-      <div class="fs-bar-wrap">
-        <div class="fs-bar" style="background:${colors[i]};width:0%" data-w="${w}"></div>
-      </div>
-      <span class="fs-count">${fmtNum(s.count)}</span>
-      <span class="fs-pct">${pct(s.count, novos)}</span>
-      <span class="fs-hist">${typeof hist === 'number' ? fmtNum(hist) + ' hist.' : '—'}</span>`;
+  const container=document.getElementById('funnel-stages'); container.innerHTML='';
+  STAGE_NAMES.forEach((name,i)=>{
+    const s=stages[name]||{count:0};
+    const w=Math.min(100,Math.round(s.count/(novos||1)*100));
+    const hist=histData[i];
+    const div=document.createElement('div'); div.className='funnel-stage';
+    div.innerHTML=`<span class="fs-label">${name}</span><div class="fs-bar-wrap"><div class="fs-bar" style="background:${colors[i]};width:0%" data-w="${w}"></div></div><span class="fs-count">${fmtNum(s.count)}</span><span class="fs-pct">${pct(s.count,novos)}</span><span class="fs-hist">${typeof hist==='number'?fmtNum(hist)+' hist.':'—'}</span>`;
     container.appendChild(div);
   });
-  
-  requestAnimationFrame(() => { 
-    document.querySelectorAll('.fs-bar[data-w]').forEach(el => { el.style.width = el.dataset.w + '%'; }); 
-  });
+  requestAnimationFrame(()=>{ document.querySelectorAll('.fs-bar[data-w]').forEach(el=>{el.style.width=el.dataset.w+'%';}); });
 }
-  
+ 
 function renderTagFunnel(tagCounts) {
   const container=document.getElementById('tag-funnel-stages'); container.innerHTML='';
   const max=Math.max(...Object.values(tagCounts),1);
@@ -865,123 +850,61 @@ function renderValorGrid(stages) {
 }
  
 function renderChart(stages, histData) {
-  // 1. Prepara os labels encurtando nomes muito longos para não quebrar o layout
-  const labels = STAGE_NAMES.map(n => n.length > 14 ? n.slice(0, 14) + '…' : n);
-  
-  // 2. Mapeia a contagem atual do pipeline (CRM) para cada etapa
-  const current = STAGE_NAMES.map(n => (stages[n] || {}).count || 0);
-  
-  // 3. Mapeia o histórico individual de tags recebido do loadData
-  // O array histData deve seguir a ordem: [Novo, Conversa, Qualificado, Desqualificado, Reunião, FU Closer, FU Ativo, Fechado]
-  const hist = histData.map(v => typeof v === 'number' ? v : 0);
-
-  // 4. Destrói a instância anterior do gráfico para evitar sobreposição ao atualizar[cite: 1]
-  if (chartInstance) chartInstance.destroy();
-  
-  const ctx = document.getElementById('chart-funil').getContext('2d');
-  chartInstance = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: labels,
-      datasets: [
-        {
-          label: 'Pipeline atual',
-          data: current,
-          backgroundColor: 'rgba(37, 99, 235, 0.75)', // Azul para o momento atual
-          borderRadius: 5,
-          borderSkipped: false,
-          barPercentage: 0.8,
-          categoryPercentage: 0.8
-        },
-        {
-          label: 'Histórico (tag)',
-          data: hist,
-          backgroundColor: 'rgba(209, 213, 219, 0.7)', // Cinza para o histórico acumulado
-          borderRadius: 5,
-          borderSkipped: false,
-          barPercentage: 0.8,
-          categoryPercentage: 0.8
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false }, // Legenda customizada já existe no seu HTML[cite: 1]
-        tooltip: {
-          backgroundColor: '#fff',
-          titleColor: '#111827',
-          bodyColor: '#6b7280',
-          borderColor: '#e8eaef',
-          borderWidth: 1,
-          padding: 12,
-          boxPadding: 6,
-          usePointStyle: true,
-          callbacks: {
-            label: (ctx) => ` ${ctx.dataset.label}: ${ctx.parsed.y} leads`
-          }
-        }
-      },
-      scales: {
-        x: {
-          stacked: false, // Mantém as barras lado a lado para comparação direta[cite: 1]
-          ticks: {
-            color: '#9ca3af',
-            font: { size: 10, family: "'JetBrains Mono', monospace" }
-          },
-          grid: { display: false }
-        },
-        y: {
-          beginAtZero: true,
-          ticks: {
-            color: '#9ca3af',
-            font: { size: 10, family: "'JetBrains Mono', monospace" },
-            stepSize: 1
-          },
-          grid: {
-            color: 'rgba(0, 0, 0, 0.04)',
-            drawBorder: false
-          }
-        }
+  const labels=STAGE_NAMES.map(n=>n.length>14?n.slice(0,14)+'…':n);
+  const current=STAGE_NAMES.map(n=>(stages[n]||{}).count||0);
+  const hist=histData.map(v=>typeof v==='number'?v:0);
+  if(chartInstance) chartInstance.destroy();
+  chartInstance=new Chart(document.getElementById('chart-funil'),{
+    type:'bar',
+    data:{labels,datasets:[
+      {label:'Pipeline atual',data:current,backgroundColor:'rgba(37,99,235,0.75)',borderRadius:5},
+      {label:'Histórico (tag)',data:hist,backgroundColor:'rgba(209,213,219,0.7)',borderRadius:5}
+    ]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{backgroundColor:'#fff',borderColor:'#e5e7eb',borderWidth:1,titleColor:'#111827',bodyColor:'#6b7280',callbacks:{label:ctx=>' '+ctx.parsed.y+' leads'}}},
+      scales:{
+        x:{ticks:{color:'#9ca3af',font:{size:10,family:'JetBrains Mono'}},grid:{color:'rgba(0,0,0,.04)'}},
+        y:{ticks:{color:'#9ca3af',font:{size:10,family:'JetBrains Mono'}},grid:{color:'rgba(0,0,0,.04)'}}
       }
     }
   });
 }
-  
+ 
 async function loadData() {
   document.getElementById('load-area').style.display = 'flex';
   document.getElementById('load-area').innerHTML = '<div class="spinner"></div><span>Buscando oportunidades...</span>';
   document.getElementById('main').style.display = 'none';
+  document.getElementById('err-area').innerHTML = '';
 
   try {
     const range = getDateRange();
 
-    // 1. Puxa oportunidades do período e totais
+    // 1. Dados do Período (Cards principais)
     const oppsNoPeriod = await fetchAllOpportunities(range);
     const stagesNoPeriod = processOpportunities(oppsNoPeriod);
+
+    // 2. Dados do Pipeline (Posição atual no CRM)
     const oppsAll = await fetchAllOpportunities(null);
     const stagesAll = processOpportunities(oppsAll);
 
-    document.getElementById('load-area').innerHTML = '<div class="spinner"></div><span>Buscando históricos individuais de tags...</span>';
+    document.getElementById('load-area').innerHTML = '<div class="spinner"></div><span>Buscando históricos individuais para cada cartão...</span>';
 
-    // 2. BUSCA DE HISTÓRICOS TOTAIS (Independente do filtro de data)
-    // Criamos uma busca para cada tag específica que define o "histórico" daquela etapa
+    // 3. BUSCA DE HISTÓRICOS TOTAIS (Para TODOS os cartões)
+    // Criei uma tarefa para cada histórico de cada cartão da imagem
     const histTasks = [
-      () => fetchContactsByTag('etapa:lead-novo', null),       // Histórico Lead Novo
-      () => fetchContactsByTag(TAGS.conv, null),              // Histórico Em Conversa
-      () => fetchContactsByTag('etapa:desqualificado', null),  // Histórico Desqualificados
-      () => fetchContactsByTag(TAGS.qual, null),              // Histórico Qualificados
-      () => fetchContactsByTag('etapa:reuniao-closer', null),  // Histórico Reunião
-      () => fetchContactsByTag(TAGS.fech, null),              // Histórico Contratos
-      () => fetchContactsByTag('etapa:followup-closer', null), // Histórico Follow Up Closer
-      () => fetchContactsByTag(TAGS.aca, null),               // Histórico Follow Up Ativo
+      () => fetchContactsByTag('etapa:lead-novo', null),       // Histórico p/ Lead Novo
+      () => fetchContactsByTag(TAGS.conv, null),              // Histórico p/ Em Conversa
+      () => fetchContactsByTag('etapa:desqualificado', null),  // Histórico p/ Desqualificados
+      () => fetchContactsByTag(TAGS.qual, null),              // Histórico p/ Qualificados
+      () => fetchContactsByTag('etapa:reuniao-closer', null),  // Histórico p/ Reunião Closer
+      () => fetchContactsByTag(TAGS.fech, null),              // Histórico p/ Contratos Fechados
+      () => fetchContactsByTag('etapa:followup-closer', null), // Histórico p/ Follow Up Closer
+      () => fetchContactsByTag(TAGS.aca, null),               // Histórico p/ Follow Up Ativo
     ];
-    
-    // Executa em sequência para não sobrecarregar a API do GHL
     const [hNovo, hConv, hDesq, hQual, hReu, hFech, hAcd, hAca] = await runSequential(histTasks, 300);
 
-    // 3. BUSCA DE DADOS ATUAIS (Baseado no período selecionado)
+    // 4. BUSCA DE ATIVIDADE NO PERÍODO (Somente o que houve no mês)[cite: 1]
     const periodTasks = [
       () => fetchContactsByTag(TAGS.conv, range),
       () => fetchContactsByTag(TAGS.qual, range),
@@ -990,47 +913,68 @@ async function loadData() {
     ];
     const [nowConv, nowQual, nowFech, nowAca] = await runSequential(periodTasks, 300);
 
-    // 4. ATUALIZAÇÃO DA INTERFACE (Mapeando cada ID do HTML para seu valor histórico)
-    
-    // Topo do Funil
-    setEl('k-novos', fmtNum(stagesNoPeriod['Lead Novo']?.count || 0));
-    setEl('k-novos-hist', fmtNum(hNovo)); // <--- Novo ID no seu HTML
-    
-    setEl('k-conv', fmtNum(nowConv));
-    setEl('k-conv-hist', fmtNum(hConv));
+    // 5. Variáveis de posicionamento (CRM)[cite: 1]
+    const novos = stagesNoPeriod['Lead Novo']?.count || 0;
+    const desq  = stagesNoPeriod['Desqualificado (triagem)']?.count || 0;
+    const reu   = stagesNoPeriod['Reunião Closer']?.count || 0;
+    const acd   = stagesNoPeriod['Follow Up Closer']?.count || 0;
 
-    // Triagem
-    setEl('k-desq', fmtNum(stagesNoPeriod['Desqualificado (triagem)']?.count || 0));
-    setEl('k-desq-hist', fmtNum(hDesq));
+    // 6. ATUALIZAÇÃO DOS PARES (Cada cartão agora tem seu histórico)[cite: 1]
     
-    setEl('k-qual', fmtNum(nowQual));
-    setEl('k-qual-hist', fmtNum(hQual));
-
-    // Reunião e Fechamento
-    setEl('k-reu', fmtNum(stagesNoPeriod['Reunião Closer']?.count || 0));
-    setEl('k-reu-hist', fmtNum(hReu));
+    // TOPO DO FUNIL
+    setEl('k-novos', fmtNum(novos));
+    setEl('k-novos-hist', fmtNum(hNovo));   // Histórico específico de Lead Novo
     
-    setEl('k-fech', fmtNum(nowFech));
-    setEl('k-fech-hist', fmtNum(hFech));
-
-    // Acompanhamento
-    setEl('k-acd', fmtNum(stagesNoPeriod['Follow Up Closer']?.count || 0));
-    setEl('k-acd-hist', fmtNum(hAcd));
+    setEl('k-conv', fmtNum(nowConv));      
+    setEl('k-conv-hist', fmtNum(hConv));    // Histórico específico de Em Conversa
     
-    setEl('k-aca', fmtNum(nowAca));
-    setEl('k-aca-hist', fmtNum(hAca));
+    // TRIAGEM
+    setEl('k-desq', fmtNum(desq));   
+    setEl('k-desq-hist', fmtNum(hDesq));    // Histórico específico de Desqualificados
+    
+    setEl('k-qual', fmtNum(nowQual));   
+    setEl('k-qual-hist', fmtNum(hQual));    // Histórico específico de Qualificados
+    
+    // REUNIÃO E FECHAMENTO
+    setEl('k-reu', fmtNum(reu));     
+    setEl('k-reu-hist', fmtNum(hReu));      // Histórico específico de Reunião Closer
+    
+    setEl('k-fech', fmtNum(nowFech));   
+    setEl('k-fech-hist', fmtNum(hFech));    // Histórico específico de Contratos Fechados
+    
+    // ACOMPANHAMENTO
+    setEl('k-acd', fmtNum(acd));     
+    setEl('k-acd-hist', fmtNum(hAcd));      // Histórico específico de Follow Up Closer
+    
+    setEl('k-aca', fmtNum(nowAca));     
+    setEl('k-aca-hist', fmtNum(hAca));      // Histórico específico de Follow Up Ativo
 
-    // 5. Renderizações de gráficos e tabelas
+    // 7. Renderização Visual e Gráficos[cite: 1]
+    const allTagTasks = ALL_TAGS.map(t => () => fetchContactsByTag(t.key, range));
+    const tagResults = await runSequential(allTagTasks, 300);
+    const tagCounts = {};
+    ALL_TAGS.forEach((t, i) => { tagCounts[t.key] = tagResults[i]; });
+
     const histData = [hNovo, hConv, hQual, hDesq, hReu, hAcd, hAca, hFech];
+ 
+    renderTaxaConversaoReal(tagCounts);
+    renderTagFunnel(tagCounts);
+    renderFunnelStages(stagesAll, novos, histData);
+    renderValorGrid(stagesAll);
     renderChart(stagesAll, histData);
-    renderFunnelStages(stagesAll, stagesNoPeriod['Lead Novo']?.count || 0, histData);
 
     document.getElementById('load-area').style.display = 'none';
     document.getElementById('main').style.display = 'block';
 
+    // 8. Timestamps[cite: 1]
+    const time = new Date().toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    setEl('upd-time', 'Atualizado ' + time);
+    setEl('footer-time', 'Última atualização: ' + time);
+
   } catch (e) {
     console.error(e);
-    document.getElementById('err-area').innerHTML = `<div class="err-box">❌ Erro ao carregar: ${e.message}</div>`;
+    document.getElementById('load-area').style.display = 'none';
+    document.getElementById('err-area').innerHTML = `<div class="err-box">❌ Erro: ${e.message}</div>`;
   }
 }
   
