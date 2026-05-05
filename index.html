@@ -312,105 +312,134 @@ body {
  
     <div class="divider"></div>
  
-    <div class="section-title">Topo do funil</div>
-    <div class="kpi-grid">
-      <div class="kpi">
-        <div class="kpi-accent" style="background:var(--blue)"></div>
-        <div class="kpi-label">Lead Novo — entradas no período</div>
-        <div class="kpi-val" id="k-novos">—</div>
-        <div class="kpi-meta">ponto de entrada</div>
-        <span class="badge badge-blue">100%</span>
-      </div>
-      <div class="kpi">
-        <div class="kpi-accent" style="background:var(--blue)"></div>
-        <div class="kpi-label">Em Conversa — atual</div>
-        <div class="kpi-val" id="k-conv">—</div>
-        <div class="kpi-meta" id="m-conv">—</div>
-        <span class="badge badge-blue" id="p-conv">—</span>
-      </div>
-      <div class="kpi">
-        <div class="kpi-accent" style="background:var(--border2)"></div>
-        <div class="kpi-label">Histórico: já tocaram Em Conversa</div>
-        <div class="kpi-val" id="k-conv-hist">—</div>
-        <div class="kpi-meta">todos os tempos via tag</div>
-        <span class="badge badge-gray">histórico</span>
-      </div>
+  <div class="section-title">Topo do funil</div>
+  <div class="kpi-grid">
+    <div class="kpi">
+      <div class="kpi-accent" style="background:var(--blue)"></div>
+      <div class="kpi-label">Lead Novo — entradas no período</div>
+      <div class="kpi-val" id="k-novos">—</div>
+      <div class="kpi-meta">ponto de entrada</div>
+      <span class="badge badge-blue">100%</span>
     </div>
- 
+    <div class="kpi">
+      <div class="kpi-accent" style="background:var(--border2)"></div>
+      <div class="kpi-label">Histórico: total de Leads Novos</div>
+      <div class="kpi-val" id="k-novos-hist">—</div>
+      <div class="kpi-meta">todos os tempos via tag</div>
+      <span class="badge badge-gray">histórico</span>
+    </div>
+    <div class="kpi">
+      <div class="kpi-accent" style="background:var(--blue)"></div>
+      <div class="kpi-label">Em Conversa — atual</div>
+      <div class="kpi-val" id="k-conv">—</div>
+      <div class="kpi-meta" id="m-conv">—</div>
+      <span class="badge badge-blue" id="p-conv">—</span>
+    </div>
+    <div class="kpi">
+      <div class="kpi-accent" style="background:var(--border2)"></div>
+      <div class="kpi-label">Histórico: já tocaram Em Conversa</div>
+      <div class="kpi-val" id="k-conv-hist">—</div>
+      <div class="kpi-meta">todos os tempos via tag</div>
+      <span class="badge badge-gray">histórico</span>
+    </div>
+  </div>
+  
     <div class="section-title">Triagem</div>
-    <div class="kpi-grid">
-      <div class="kpi">
-        <div class="kpi-accent" style="background:var(--red)"></div>
-        <div class="kpi-label">Desqualificados — atual</div>
-        <div class="kpi-val" id="k-desq">—</div>
-        <div class="kpi-meta" id="m-desq">—</div>
-        <span class="badge badge-red" id="p-desq">—</span>
-      </div>
-      <div class="kpi">
-        <div class="kpi-accent" style="background:var(--green)"></div>
-        <div class="kpi-label">Qualificados — atual</div>
-        <div class="kpi-val" id="k-qual">—</div>
-        <div class="kpi-meta" id="m-qual">—</div>
-        <span class="badge badge-green" id="p-qual">—</span>
-      </div>
-      <div class="kpi">
-        <div class="kpi-accent" style="background:var(--border2)"></div>
-        <div class="kpi-label">Histórico: já foram Qualificados</div>
-        <div class="kpi-val" id="k-qual-hist">—</div>
-        <div class="kpi-meta">todos os tempos via tag</div>
-        <span class="badge badge-gray">histórico</span>
-      </div>
+  <div class="kpi-grid">
+    <div class="kpi">
+      <div class="kpi-accent" style="background:var(--red)"></div>
+      <div class="kpi-label">Desqualificados — atual</div>
+      <div class="kpi-val" id="k-desq">—</div>
+      <div class="kpi-meta" id="m-desq">—</div>
+      <span class="badge badge-red" id="p-desq">—</span>
     </div>
+    <div class="kpi">
+      <div class="kpi-accent" style="background:var(--border2)"></div>
+      <div class="kpi-label">Histórico: já foram Desqualificados</div>
+      <div class="kpi-val" id="k-desq-hist">—</div>
+      <div class="kpi-meta">todos os tempos via tag</div>
+      <span class="badge badge-gray">histórico</span>
+    </div>
+    <div class="kpi">
+      <div class="kpi-accent" style="background:var(--green)"></div>
+      <div class="kpi-label">Qualificados — atual</div>
+      <div class="kpi-val" id="k-qual">—</div>
+      <div class="kpi-meta" id="m-qual">—</div>
+      <span class="badge badge-green" id="p-qual">—</span>
+    </div>
+    <div class="kpi">
+      <div class="kpi-accent" style="background:var(--border2)"></div>
+      <div class="kpi-label">Histórico: já foram Qualificados</div>
+      <div class="kpi-val" id="k-qual-hist">—</div>
+      <div class="kpi-meta">todos os tempos via tag</div>
+      <span class="badge badge-gray">histórico</span>
+    </div>
+  </div>
+
+
+  <div class="section-title">Reunião e Fechamento</div>
+<div class="kpi-grid">
+  <div class="kpi">
+    <div class="kpi-accent" style="background:var(--purple)"></div>
+    <div class="kpi-label">Reunião Closer — atual</div>
+    <div class="kpi-val" id="k-reu">—</div>
+    <div class="kpi-meta" id="m-reu">—</div>
+    <span class="badge badge-purple" id="p-reu">—</span>
+  </div>
+  <div class="kpi">
+    <div class="kpi-accent" style="background:var(--border2)"></div>
+    <div class="kpi-label">Histórico: já foram Reunião Closer</div>
+    <div class="kpi-val" id="k-reu-hist">—</div>
+    <div class="kpi-meta">todos os tempos via tag</div>
+    <span class="badge badge-gray">histórico</span>
+  </div>
+  <div class="kpi">
+    <div class="kpi-accent" style="background:var(--green)"></div>
+    <div class="kpi-label">Contratos Fechados — atual</div>
+    <div class="kpi-val" id="k-fech">—</div>
+    <div class="kpi-meta" id="m-fech">—</div>
+    <span class="badge badge-green" id="p-fech">—</span>
+  </div>
+  <div class="kpi">
+    <div class="kpi-accent" style="background:var(--border2)"></div>
+    <div class="kpi-label">Histórico: já fecharam contrato</div>
+    <div class="kpi-val" id="k-fech-hist">—</div>
+    <div class="kpi-meta">todos os tempos via tag</div>
+    <span class="badge badge-gray">histórico</span>
+  </div>
+</div>
  
-    <div class="section-title">Reunião e Fechamento</div>
-    <div class="kpi-grid">
-      <div class="kpi">
-        <div class="kpi-accent" style="background:var(--purple)"></div>
-        <div class="kpi-label">Reunião Closer — atual</div>
-        <div class="kpi-val" id="k-reu">—</div>
-        <div class="kpi-meta" id="m-reu">—</div>
-        <span class="badge badge-purple" id="p-reu">—</span>
-      </div>
-      <div class="kpi">
-        <div class="kpi-accent" style="background:var(--green)"></div>
-        <div class="kpi-label">Contratos Fechados — atual</div>
-        <div class="kpi-val" id="k-fech">—</div>
-        <div class="kpi-meta" id="m-fech">—</div>
-        <span class="badge badge-green" id="p-fech">—</span>
-      </div>
-      <div class="kpi">
-        <div class="kpi-accent" style="background:var(--border2)"></div>
-        <div class="kpi-label">Histórico: já fecharam contrato</div>
-        <div class="kpi-val" id="k-fech-hist">—</div>
-        <div class="kpi-meta">todos os tempos via tag</div>
-        <span class="badge badge-gray">histórico</span>
-      </div>
-    </div>
- 
-    <div class="section-title">Acompanhamento</div>
-    <div class="kpi-grid">
-      <div class="kpi">
-        <div class="kpi-accent" style="background:var(--amber)"></div>
-        <div class="kpi-label">Follow Up Closer — atual</div>
-        <div class="kpi-val" id="k-acd">—</div>
-        <div class="kpi-meta" id="m-acd">—</div>
-        <span class="badge badge-amber" id="p-acd">—</span>
-      </div>
-      <div class="kpi">
-        <div class="kpi-accent" style="background:var(--amber)"></div>
-        <div class="kpi-label">Follow Up Ativo — atual</div>
-        <div class="kpi-val" id="k-aca">—</div>
-        <div class="kpi-meta" id="m-aca">—</div>
-        <span class="badge badge-amber" id="p-aca">—</span>
-      </div>
-      <div class="kpi">
-        <div class="kpi-accent" style="background:var(--border2)"></div>
-        <div class="kpi-label">Histórico: já foram Follow Up Ativo</div>
-        <div class="kpi-val" id="k-aca-hist">—</div>
-        <div class="kpi-meta">todos os tempos via tag</div>
-        <span class="badge badge-gray">histórico</span>
-      </div>
-    </div>
+<div class="section-title">Acompanhamento</div>
+<div class="kpi-grid">
+  <div class="kpi">
+    <div class="kpi-accent" style="background:var(--amber)"></div>
+    <div class="kpi-label">Follow Up Closer — atual</div>
+    <div class="kpi-val" id="k-acd">—</div>
+    <div class="kpi-meta" id="m-acd">—</div>
+    <span class="badge badge-amber" id="p-acd">—</span>
+  </div>
+  <div class="kpi">
+    <div class="kpi-accent" style="background:var(--border2)"></div>
+    <div class="kpi-label">Histórico: já foram Follow Up Closer</div>
+    <div class="kpi-val" id="k-acd-hist">—</div>
+    <div class="kpi-meta">todos os tempos via tag</div>
+    <span class="badge badge-gray">histórico</span>
+  </div>
+  <div class="kpi">
+    <div class="kpi-accent" style="background:var(--amber)"></div>
+    <div class="kpi-label">Follow Up Ativo — atual</div>
+    <div class="kpi-val" id="k-aca">—</div>
+    <div class="kpi-meta" id="m-aca">—</div>
+    <span class="badge badge-amber" id="p-aca">—</span>
+  </div>
+  <div class="kpi">
+    <div class="kpi-accent" style="background:var(--border2)"></div>
+    <div class="kpi-label">Histórico: já foram Follow Up Ativo</div>
+    <div class="kpi-val" id="k-aca-hist">—</div>
+    <div class="kpi-meta">todos os tempos via tag</div>
+    <span class="badge badge-gray">histórico</span>
+  </div>
+</div>
  
     <div class="divider"></div>
  
@@ -810,8 +839,14 @@ function renderFunnelStages(stages, novos, histData) {
     const s=stages[name]||{count:0};
     const w=Math.min(100,Math.round(s.count/(novos||1)*100));
     const hist=histData[i];
+    const pctStr = novos ? Math.round(s.count/novos*100)+'%' : '—';
     const div=document.createElement('div'); div.className='funnel-stage';
-    div.innerHTML=`<span class="fs-label">${name}</span><div class="fs-bar-wrap"><div class="fs-bar" style="background:${colors[i]};width:0%" data-w="${w}"></div></div><span class="fs-count">${fmtNum(s.count)}</span><span class="fs-pct">${pct(s.count,novos)}</span><span class="fs-hist">${typeof hist==='number'?fmtNum(hist)+' hist.':'—'}</span>`;
+    div.innerHTML=`
+      <span class="fs-label">${name}</span>
+      <div class="fs-bar-wrap"><div class="fs-bar" style="background:${colors[i]};width:0%" data-w="${w}"></div></div>
+      <span class="fs-count">${fmtNum(s.count)}</span>
+      <span class="fs-pct">${pctStr}</span>
+      <span class="fs-hist">${typeof hist==='number'?fmtNum(hist)+' hist.':'—'}</span>`;
     container.appendChild(div);
   });
   requestAnimationFrame(()=>{ document.querySelectorAll('.fs-bar[data-w]').forEach(el=>{el.style.width=el.dataset.w+'%';}); });
@@ -959,7 +994,7 @@ async function loadData() {
  
     renderTaxaConversaoReal(tagCounts);
     renderTagFunnel(tagCounts);
-    renderFunnelStages(stagesAll, novos, histData);
+    renderFunnelStages(stagesNoPeriod, novos, histData);
     renderValorGrid(stagesAll);
     renderChart(stagesAll, histData);
 
