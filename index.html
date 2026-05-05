@@ -527,11 +527,12 @@
       </div>
   
       <div class="divider"></div>
-  
-      <div class="section-title">⏱ Tempo médio entre etapas — precisão em horas</div>
-      <div style="font-size:12px;color:var(--text3);margin-bottom:16px;">
-        Calculado a partir das notas <code style="background:var(--bg);padding:2px 6px;border-radius:4px;font-size:11px;">funil::etapa::{{now}}</code> registradas nas automações.
-      </div>
+
+      <div class="section-title">⏱ Tempo médio de permanência por etapa</div>
+<div style="font-size:12px;color:var(--text3);margin-bottom:16px;">
+  Calculado a partir das notas <code style="background:var(--bg);padding:2px 6px;border-radius:4px;font-size:11px;">funil::etapa::{{now}}</code> — tempo que o lead ficou em cada etapa antes de avançar.
+</div>
+
       <div class="time-stages-grid" id="time-stages-grid">
         <div class="state-box" style="min-height:120px;grid-column:1/-1">
           <div class="spinner"></div>
@@ -770,172 +771,262 @@ const STAGE_TRANSITIONS = [
     return match ? match[1].trim().toLowerCase() : null;
   }
   
-  async function calcTimeBetweenStages(updateStatus, range) {
-    const rangeKey = range ? range.start.slice(0,10) + range.end.slice(0,10) : 'all';
-    const cacheKey = `transitions:${rangeKey}`;
-    const cached = cacheGet(cacheKey); if(cached) return cached;
+ async function calcTimePerStage(updateStatus, range) {
+  const rangeKey = range ? range.start.slice(0,10) + range.end.slice(0,10) : 'all';
+  const cacheKey = `timePerStage:${rangeKey}`;
+  const cached = cacheGet(cacheKey); if(cached) return cached;
 
-    updateStatus('Buscando contatos para análise de tempo...');
+  updateStatus('Buscando contatos para análise de tempo...');
 
-    let allContacts = [], startAfter = null, startAfterId = null;
-    while(true) {
-      const params = { locationId: LOC, limit: 100 };
-      if(startAfter) params.startAfter = startAfter;
-      if(startAfterId) params.startAfterId = startAfterId;
-      const d = await ghlFetch('/contacts/', params);
-      const cs = d.contacts || [];
-      allContacts = allContacts.concat(cs);
-      if (cs.length < 100 || !d.meta?.nextPageUrl) break;
-      startAfter = d.meta.startAfter;
-      startAfterId = d.meta.startAfterId;
-      await sleep(200);
-    }
+  let allContacts = [], startAfter = null, startAfterId = null;
+  while(true) {
+    const params = { locationId: LOC, limit: 100 };
+    if(startAfter) params.startAfter = startAfter;
+    if(startAfterId) params.startAfterId = startAfterId;
+    const d = await ghlFetch('/contacts/', params);
+    const cs = d.contacts || [];
+    allContacts = allContacts.concat(cs);
+    if (cs.length < 100 || !d.meta?.nextPageUrl) break;
+    startAfter = d.meta.startAfter;
+    startAfterId = d.meta.startAfterId;
+    await sleep(200);
+  }
 
-    updateStatus(`Analisando notas de ${allContacts.length} contatos...`);
+  updateStatus(`Analisando notas de ${allContacts.length} contatos...`);
 
-    // Limites do período em ms — usados para filtrar as notas
-    const fromMs = range ? new Date(range.start).getTime() : null;
-    const toMs   = range ? new Date(range.end).getTime()   : null;
+  const fromMs = range ? new Date(range.start).getTime() : null;
+  const toMs   = range ? new Date(range.end).getTime()   : null;
 
-    const BATCH = 10;
-    const stageTimestamps = {};
+  // stageDurations[etapa] = array de horas que cada lead ficou nela
+  const stageDurations = {};
+  ALL_TAGS.forEach(t => { stageDurations[t.key.replace('etapa:','')] = []; });
 
-    for (let i = 0; i < allContacts.length; i += BATCH) {
-      const batch = allContacts.slice(i, i + BATCH);
-      await Promise.all(batch.map(async (contact) => {
-        const notes = await fetchContactNotes(contact.id);
+  const BATCH = 10;
+  for (let i = 0; i < allContacts.length; i += BATCH) {
+    const batch = allContacts.slice(i, i + BATCH);
+    await Promise.all(batch.map(async (contact) => {
+      const notes = await fetchContactNotes(contact.id);
 
-        const funiNotes = notes.filter(n => {
+      // Filtra só notas funil:: e dentro do período
+      const funiNotes = notes
+        .filter(n => {
           const body = n.body || n.text || n.note || '';
           if (!body.toLowerCase().includes('funil::')) return false;
-
-          // ── FILTRO DE DATA: só considera notas dentro do período selecionado
           if (fromMs && toMs) {
             const ts = parseNoteTimestamp(n);
             if (!ts) return false;
             const noteMs = ts.getTime();
             if (noteMs < fromMs || noteMs > toMs) return false;
           }
-
           return true;
-        });
+        })
+        .map(n => {
+          const body = n.body || n.text || n.note || '';
+          return {
+            stage: parseNoteStage(body),
+            ts: parseNoteTimestamp(n)
+          };
+        })
+        .filter(n => n.stage && n.ts);
 
-        if (funiNotes.length === 0) return;
+      if (funiNotes.length === 0) return;
 
-        stageTimestamps[contact.id] = {};
-
-        funiNotes.forEach(note => {
-          const body = note.body || note.text || note.note || '';
-          const stage = parseNoteStage(body);
-          const ts = parseNoteTimestamp(note);
-
-          if (stage && ts) {
-            // ── PROTEÇÃO CONTRA LEAD QUE VOLTA:
-            // Sempre guarda o timestamp MAIS ANTIGO de cada etapa.
-            // Se o lead voltou para a etapa, a nota mais recente é ignorada.
-            if (
-              !stageTimestamps[contact.id][stage] ||
-              ts < stageTimestamps[contact.id][stage]
-            ) {
-              stageTimestamps[contact.id][stage] = ts;
-            }
-          }
-        });
-      }));
-
-      if (i + BATCH < allContacts.length) await sleep(300);
-      updateStatus(`Analisando notas... ${Math.min(i + BATCH, allContacts.length)}/${allContacts.length} contatos`);
-    }
-
-    const results = {};
-    STAGE_TRANSITIONS.forEach(transition => {
-      const diffs = [];
-      Object.values(stageTimestamps).forEach(stages => {
-        const fromTs = stages[transition.from];
-        const toTs   = stages[transition.to];
-
-        // Só conta se ambas as etapas têm registro E a chegada foi depois da saída
-        if (fromTs && toTs && toTs > fromTs) {
-          diffs.push((toTs - fromTs) / (1000 * 60 * 60)); // diferença em horas
+      // Proteção contra lead que volta:
+      // Agrupa por etapa e pega sempre o timestamp MAIS ANTIGO
+      const firstEntry = {};
+      funiNotes.forEach(({ stage, ts }) => {
+        if (!firstEntry[stage] || ts < firstEntry[stage]) {
+          firstEntry[stage] = ts;
         }
       });
 
-      if (diffs.length > 0) {
-        const avg = diffs.reduce((a, b) => a + b, 0) / diffs.length;
-        results[`${transition.from}->${transition.to}`] = {
-          avg,
-          count: diffs.length,
-          min: Math.min(...diffs),
-          max: Math.max(...diffs)
-        };
-      } else {
-        results[`${transition.from}->${transition.to}`] = null;
-      }
-    });
+      // Monta array ordenado por timestamp de entrada
+      const stageOrder = Object.entries(firstEntry)
+        .sort((a, b) => a[1] - b[1]);
 
-    cacheSet(cacheKey, results);
-    return results;
+      // Calcula permanência: tempo entre entrada na etapa atual e entrada na próxima
+      for (let j = 0; j < stageOrder.length - 1; j++) {
+        const [stage, entryTs] = stageOrder[j];
+        const [, nextTs]       = stageOrder[j + 1];
+        const hours = (nextTs - entryTs) / (1000 * 60 * 60);
+        if (hours >= 0 && stageDurations[stage]) {
+          stageDurations[stage].push(hours);
+        }
+      }
+      // Última etapa: não tem saída registrada, ignora
+    }));
+
+    if (i + BATCH < allContacts.length) await sleep(300);
+    updateStatus(`Analisando notas... ${Math.min(i + BATCH, allContacts.length)}/${allContacts.length} contatos`);
   }
+
+  // Calcula média, min, max por etapa
+  const results = {};
+  Object.entries(stageDurations).forEach(([stage, durations]) => {
+    if (durations.length === 0) {
+      results[stage] = null;
+    } else {
+      const avg = durations.reduce((a,b) => a+b, 0) / durations.length;
+      results[stage] = {
+        avg,
+        min: Math.min(...durations),
+        max: Math.max(...durations),
+        count: durations.length
+      };
+    }
+  });
+
+  cacheSet(cacheKey, results);
+  return results;
+}
   
-  function renderTimeBetweenStages(transitionData, tagCounts) {
+function renderTimePerStage(periodData, histData) {
   const container = document.getElementById('time-stages-grid');
   container.innerHTML = '';
 
-  STAGE_TRANSITIONS.forEach(transition => {
-    const key = `${transition.from}->${transition.to}`;
-    const data = transitionData[key];
+  ALL_TAGS.forEach(({ key, label, color }) => {
+    const stage = key.replace('etapa:', '');
+    const pd = periodData[stage];
+    const hd = histData[stage];
 
-    // ── Taxa percentual via tags históricas
-    // "from" tag conta quantos chegaram naquela etapa
-    const fromTagKey = `etapa:${transition.from}`;
-    const toTagKey   = `etapa:${transition.to}`;
-    const fromCount  = tagCounts[fromTagKey] || 0;
-    const toCount    = tagCounts[toTagKey]   || 0;
-    const rawPct  = fromCount > 0 ? (toCount / fromCount * 100) : 0;
-    const taxaPct = Math.min(100, rawPct).toFixed(1) + '%';
-    const barW    = Math.min(100, Math.round(rawPct));
-
-    // ── Preenche cards tx1–tx9
-    if (transition.txId) {
-      const idx = transition.txId.replace('tx','');
-      setEl(transition.txId, taxaPct);
-      setEl('ts' + idx, `${fmtNum(toCount)} de ${fmtNum(fromCount)}`);
-      const barEl = document.getElementById('bar' + idx);
-      if (barEl) barEl.style.width = barW + '%';
-    }
-
-    // ── Card de tempo médio
     const card = document.createElement('div');
     card.className = 'time-stage-card';
 
-    if (!data) {
-      card.innerHTML = `
-        <div class="kpi-accent" style="background:${transition.color}"></div>
-        <div class="time-stage-arrow">${transition.label}</div>
-        <div style="margin-top:6px">
-          <span style="font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;color:${transition.color}">${taxaPct}</span>
-          <span style="font-size:11px;color:var(--text3);margin-left:6px">${fmtNum(toCount)} de ${fmtNum(fromCount)}</span>
-        </div>
-        <div class="time-stage-nodata" style="margin-top:8px">⏱ Tempo: dados insuficientes nas notas</div>`;
-    } else {
-      const avg = fmtHours(data.avg);
-      const minH = fmtHours(data.min);
-      const maxH = fmtHours(data.max);
-      card.innerHTML = `
-        <div class="kpi-accent" style="background:${transition.color}"></div>
-        <div class="time-stage-arrow">${transition.label}</div>
-        <div style="margin-top:6px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap">
-          <span style="font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;color:${transition.color}">${taxaPct}</span>
-          <span style="font-size:11px;color:var(--text3)">${fmtNum(toCount)} de ${fmtNum(fromCount)}</span>
-        </div>
-        <div class="time-stage-val" style="margin-top:8px">${avg ? avg.val : '—'}<span class="time-stage-unit">${avg ? avg.unit : ''}</span></div>
-        <div class="time-stage-sub">Mín: ${minH ? minH.val+minH.unit : '—'} &nbsp;|&nbsp; Máx: ${maxH ? maxH.val+maxH.unit : '—'}</div>
-        <span class="time-stage-badge">${data.count} lead${data.count!==1?'s':''} analisado${data.count!==1?'s':''}</span>`;
+    const avgFmt  = pd  ? fmtHours(pd.avg)  : null;
+    const histFmt = hd  ? fmtHours(hd.avg)  : null;
+    const minFmt  = pd  ? fmtHours(pd.min)  : null;
+    const maxFmt  = pd  ? fmtHours(pd.max)  : null;
+
+    // Comparação período vs histórico
+    let diffHtml = '';
+    if (pd && hd && hd.avg > 0) {
+      const diff = ((pd.avg - hd.avg) / hd.avg * 100).toFixed(0);
+      const isWorse = pd.avg > hd.avg;
+      const sign = diff > 0 ? '+' : '';
+      diffHtml = `<span style="
+        font-size:11px;font-weight:600;font-family:'JetBrains Mono',monospace;
+        padding:2px 7px;border-radius:5px;margin-left:8px;
+        background:${isWorse ? 'var(--red-light)' : 'var(--green-light)'};
+        color:${isWorse ? 'var(--red)' : 'var(--green)'};
+      ">${sign}${diff}% vs histórico</span>`;
     }
+
+    card.innerHTML = `
+      <div class="kpi-accent" style="background:${color}"></div>
+      <div class="time-stage-arrow" style="color:${color};font-weight:700">${label}</div>
+      ${pd ? `
+        <div style="display:flex;align-items:baseline;gap:6px;margin-top:8px;flex-wrap:wrap">
+          <div class="time-stage-val">${avgFmt ? avgFmt.val : '—'}<span class="time-stage-unit">${avgFmt ? avgFmt.unit : ''}</span></div>
+          ${diffHtml}
+        </div>
+        <div class="time-stage-sub" style="margin-top:4px">
+          Mín: ${minFmt ? minFmt.val + minFmt.unit : '—'} &nbsp;|&nbsp; Máx: ${maxFmt ? maxFmt.val + maxFmt.unit : '—'}
+        </div>
+        <div style="margin-top:6px;font-size:11px;color:var(--text3)">
+          Histórico: ${histFmt ? histFmt.val + histFmt.unit : '—'} em média
+        </div>
+        <span class="time-stage-badge">${pd.count} lead${pd.count !== 1 ? 's' : ''}</span>
+      ` : `
+        <div class="time-stage-nodata" style="margin-top:8px">Dados insuficientes nas notas</div>
+        ${hd ? `<div style="margin-top:6px;font-size:11px;color:var(--text3)">Histórico: ${histFmt ? histFmt.val + histFmt.unit : '—'} em média</div>` : ''}
+      `}
+    `;
     container.appendChild(card);
   });
+
+  // Gráfico comparativo período vs histórico
+  renderTimeChart(periodData, histData);
 }
-  
+ 
+function renderTimeChart(periodData, histData) {
+  // Cria o canvas se não existir
+  let chartBox = document.getElementById('time-chart-box');
+  if (!chartBox) {
+    chartBox = document.createElement('div');
+    chartBox.id = 'time-chart-box';
+    chartBox.className = 'chart-box';
+    chartBox.style.marginTop = '16px';
+    chartBox.innerHTML = `
+      <div class="chart-header">
+        <span class="chart-title">Tempo médio por etapa — período vs histórico</span>
+        <div class="chart-legend">
+          <span class="legend-item"><span class="legend-dot" style="background:var(--blue)"></span>Período selecionado</span>
+          <span class="legend-item"><span class="legend-dot" style="background:var(--border2)"></span>Histórico total</span>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="chart-time"></canvas></div>
+    `;
+    // Insere logo após o grid de cards de tempo
+    const grid = document.getElementById('time-stages-grid');
+    grid.parentNode.insertBefore(chartBox, grid.nextSibling);
+  }
+
+  const labels = ALL_TAGS.map(t => t.label.length > 12 ? t.label.slice(0,12) + '…' : t.label);
+  const periodVals = ALL_TAGS.map(t => {
+    const d = periodData[t.key.replace('etapa:','')];
+    return d ? Math.round(d.avg * 10) / 10 : 0;
+  });
+  const histVals = ALL_TAGS.map(t => {
+    const d = histData[t.key.replace('etapa:','')];
+    return d ? Math.round(d.avg * 10) / 10 : 0;
+  });
+
+  if (window._timeChartInstance) window._timeChartInstance.destroy();
+  window._timeChartInstance = new Chart(document.getElementById('chart-time'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Período (horas)',
+          data: periodVals,
+          backgroundColor: 'rgba(37,99,235,0.75)',
+          borderRadius: 5
+        },
+        {
+          label: 'Histórico (horas)',
+          data: histVals,
+          backgroundColor: 'rgba(209,213,219,0.7)',
+          borderRadius: 5
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#fff',
+          borderColor: '#e5e7eb',
+          borderWidth: 1,
+          titleColor: '#111827',
+          bodyColor: '#6b7280',
+          callbacks: {
+            label: ctx => {
+              const h = ctx.parsed.y;
+              if (h === 0) return ' sem dados';
+              if (h < 24) return ` ${h}h`;
+              return ` ${(h/24).toFixed(1)} dias`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: { ticks: { color: '#9ca3af', font: { size: 10, family: 'JetBrains Mono' } }, grid: { color: 'rgba(0,0,0,.04)' } },
+        y: {
+          ticks: {
+            color: '#9ca3af',
+            font: { size: 10, family: 'JetBrains Mono' },
+            callback: v => v < 24 ? v + 'h' : (v/24).toFixed(1) + 'd'
+          },
+          grid: { color: 'rgba(0,0,0,.04)' }
+        }
+      }
+    }
+  });
+}
+
   // ── FIX PRINCIPAL: usa pipelineStageId para mapear o nome da etapa
   function processOpportunities(opps) {
     const stages={};
@@ -1138,9 +1229,18 @@ async function loadData() {
       const timeContainer = document.getElementById('time-stages-grid');
       timeContainer.innerHTML = '<div class="state-box" style="min-height:120px;grid-column:1/-1"><div class="spinner"></div><span>Calculando tempos entre etapas...</span></div>';
 
-        const transitionData = await calcTimeBetweenStages(status => {
-      timeContainer.innerHTML = `<div class="state-box" style="min-height:120px;grid-column:1/-1"><div class="spinner"></div><span>${status}</span></div>`;
-    }, range);
+
+      const timeContainer = document.getElementById('time-stages-grid');
+timeContainer.innerHTML = '<div class="state-box" style="min-height:120px;grid-column:1/-1"><div class="spinner"></div><span>Calculando tempo por etapa...</span></div>';
+
+      const [timePerStagePeriod, timePerStageHist] = await Promise.all([
+  calcTimePerStage(status => {
+    timeContainer.innerHTML = `<div class="state-box" style="min-height:120px;grid-column:1/-1"><div class="spinner"></div><span>${status}</span></div>`;
+  }, range),
+  calcTimePerStage(() => {}, null) // histórico sem filtro, sem atualizar status
+]);
+
+renderTimePerStage(timePerStagePeriod, timePerStageHist);
 
       // Passa tagCountsHist para usar contagem histórica nas taxas
       // (período pode ter poucos dados e distorcer a taxa percentual)
