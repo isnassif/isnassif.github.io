@@ -463,7 +463,8 @@
         <div class="rate-card"><div class="rate-label">Reunião → Contrato Fechado</div><div class="rate-val" id="tx5">—</div><div class="rate-sub" id="ts5">—</div><div class="bar-track"><div class="bar-fill" id="bar5" style="background:var(--green);width:0%"></div></div></div>
         <div class="rate-card"><div class="rate-label">Reunião → Follow Up Ativo</div><div class="rate-val" id="tx6">—</div><div class="rate-sub" id="ts6">—</div><div class="bar-track"><div class="bar-fill" id="bar6" style="background:var(--amber);width:0%"></div></div></div>
         <div class="rate-card"><div class="rate-label">Follow Up Ativo → Contrato (hist.)</div><div class="rate-val" id="tx7">—</div><div class="rate-sub" id="ts7">—</div><div class="bar-track"><div class="bar-fill" id="bar7" style="background:#06b6d4;width:0%"></div></div></div>
-        <div class="rate-card highlight"><div class="rate-label">Conversão geral (Lead → Contrato)</div><div class="rate-val" id="tx8">—</div><div class="rate-sub" id="ts8">leads → contratos fechados</div><div class="bar-track"><div class="bar-fill" id="bar8" style="background:var(--green);width:0%"></div></div></div>
+        <div class="rate-card"><div class="rate-label">Follow Up Closer → Contrato</div><div class="rate-val" id="tx8">—</div><div class="rate-sub" id="ts8">—</div><div class="bar-track"><div class="bar-fill" id="bar8" style="background:var(--purple);width:0%"></div></div></div>
+        <div class="rate-card highlight"><div class="rate-label">Conversão geral (Lead → Contrato)</div><div class="rate-val" id="tx9">—</div><div class="rate-sub" id="ts9">leads → contratos fechados</div><div class="bar-track"><div class="bar-fill" id="bar9" style="background:var(--green);width:0%"></div></div></div>
       </div>
   
       <div class="divider"></div>
@@ -532,25 +533,27 @@
   const TAGS = { conv:'etapa:em-conversa', qual:'etapa:qualificado', fech:'etapa:contrato-fechado', aca:'etapa:followup-ativo' };
   
   const ALL_TAGS = [
-    { key:'etapa:lead-novo',        label:'Lead Novo',         color:'#2563eb' },
-    { key:'etapa:em-conversa',      label:'Em Conversa',       color:'#3b82f6' },
-    { key:'etapa:qualificado',      label:'Qualificado',       color:'#059669' },
-    { key:'etapa:desqualificado',   label:'Desqualificado',    color:'#dc2626' },
-    { key:'etapa:reuniao-closer',   label:'Reunião Closer',    color:'#7c3aed' },
-    { key:'etapa:followup-closer',  label:'Follow Up Closer',  color:'#d97706' },
-    { key:'etapa:followup-ativo',   label:'Follow Up Ativo',   color:'#f59e0b' },
-    { key:'etapa:contrato-fechado', label:'Contrato Fechado',  color:'#059669' },
-  ];
+  { key:'etapa:lead-novo',        label:'Lead Novo',         color:'#2563eb' },
+  { key:'etapa:em-conversa',      label:'Em Conversa',       color:'#3b82f6' },
+  { key:'etapa:qualificado',      label:'Qualificado',       color:'#059669' },
+  { key:'etapa:desqualificado',   label:'Desqualificado',    color:'#dc2626' },  // ← confirme se sua tag é 'etapa:desqualificado' ou 'etapa:desqualificado-triagem'
+  { key:'etapa:reuniao-closer',   label:'Reunião Closer',    color:'#7c3aed' },
+  { key:'etapa:followup-closer',  label:'Follow Up Closer',  color:'#d97706' },
+  { key:'etapa:followup-ativo',   label:'Follow Up Ativo',   color:'#f59e0b' },
+  { key:'etapa:contrato-fechado', label:'Contrato Fechado',  color:'#059669' },
+];
   
-  const STAGE_TRANSITIONS = [
-    { from: 'lead-novo',       to: 'em-conversa',      label: 'Lead Novo → Em Conversa',       color: '#2563eb' },
-    { from: 'em-conversa',     to: 'qualificado',       label: 'Em Conversa → Qualificado',     color: '#059669' },
-    { from: 'em-conversa',     to: 'desqualificado',    label: 'Em Conversa → Desqualificado',  color: '#dc2626' },
-    { from: 'qualificado',     to: 'reuniao-closer',    label: 'Qualificado → Reunião Closer',  color: '#7c3aed' },
-    { from: 'reuniao-closer',  to: 'contrato-fechado',  label: 'Reunião → Contrato Fechado',    color: '#059669' },
-    { from: 'reuniao-closer',  to: 'followup-ativo',    label: 'Reunião → Follow Up Ativo',     color: '#d97706' },
-    { from: 'lead-novo',       to: 'contrato-fechado',  label: 'Lead Novo → Contrato (total)',  color: '#059669' },
-  ];
+const STAGE_TRANSITIONS = [
+  { from: 'lead-novo',       to: 'qualificado',       label: 'Lead Novo → Qualificado',             color: '#059669', txId: 'tx1' },
+  { from: 'lead-novo',       to: 'desqualificado',    label: 'Lead Novo → Desqualificado',          color: '#dc2626', txId: 'tx2' },
+  { from: 'qualificado',     to: 'em-conversa',       label: 'Qualificado → Em Conversa',           color: '#2563eb', txId: 'tx3' },
+  { from: 'qualificado',     to: 'reuniao-closer',    label: 'Qualificado → Reunião Closer',        color: '#7c3aed', txId: 'tx4' },
+  { from: 'reuniao-closer',  to: 'followup-closer',   label: 'Reunião Closer → Follow Up Closer',  color: '#d97706', txId: 'tx5' },
+  { from: 'reuniao-closer',  to: 'followup-ativo',    label: 'Reunião Closer → Follow Up Ativo',   color: '#f59e0b', txId: 'tx6' },
+  { from: 'reuniao-closer',  to: 'contrato-fechado',  label: 'Reunião Closer → Contrato Fechado',  color: '#059669', txId: 'tx7' },
+  { from: 'followup-ativo',  to: 'contrato-fechado',  label: 'Follow Up Ativo → Contrato Fechado', color: '#0891b2', txId: 'tx8' },
+  { from: 'followup-closer', to: 'contrato-fechado',  label: 'Follow Up Closer → Contrato Fechado',color: '#7c3aed', txId: 'tx9' },
+];
   
   let period = 'this_month';
   let chartInstance = null;
@@ -787,33 +790,63 @@
     return results;
   }
   
-  function renderTimeBetweenStages(transitionData) {
-    const container = document.getElementById('time-stages-grid');
-    container.innerHTML = '';
-    STAGE_TRANSITIONS.forEach(transition => {
-      const key = `${transition.from}->${transition.to}`;
-      const data = transitionData[key];
-      const card = document.createElement('div');
-      card.className = 'time-stage-card';
-      if (!data) {
-        card.innerHTML = `
-          <div class="kpi-accent" style="background:${transition.color}"></div>
-          <div class="time-stage-arrow">${transition.label}</div>
-          <div class="time-stage-nodata">Dados insuficientes — as automações precisam acumular histórico.</div>`;
-      } else {
-        const avg = fmtHours(data.avg);
-        const minH = fmtHours(data.min);
-        const maxH = fmtHours(data.max);
-        card.innerHTML = `
-          <div class="kpi-accent" style="background:${transition.color}"></div>
-          <div class="time-stage-arrow">${transition.label}</div>
-          <div class="time-stage-val">${avg ? avg.val : '—'}<span class="time-stage-unit">${avg ? avg.unit : ''}</span></div>
-          <div class="time-stage-sub">Mín: ${minH ? minH.val+minH.unit : '—'} &nbsp;|&nbsp; Máx: ${maxH ? maxH.val+maxH.unit : '—'}</div>
-          <span class="time-stage-badge">${data.count} lead${data.count!==1?'s':''} analisado${data.count!==1?'s':''}</span>`;
-      }
-      container.appendChild(card);
-    });
-  }
+  function renderTimeBetweenStages(transitionData, tagCounts) {
+  const container = document.getElementById('time-stages-grid');
+  container.innerHTML = '';
+
+  STAGE_TRANSITIONS.forEach(transition => {
+    const key = `${transition.from}->${transition.to}`;
+    const data = transitionData[key];
+
+    // ── Taxa percentual via tags históricas
+    // "from" tag conta quantos chegaram naquela etapa
+    const fromTagKey = `etapa:${transition.from}`;
+    const toTagKey   = `etapa:${transition.to}`;
+    const fromCount  = tagCounts[fromTagKey] || 0;
+    const toCount    = tagCounts[toTagKey]   || 0;
+    const taxaPct    = fromCount > 0 ? (toCount / fromCount * 100).toFixed(1) + '%' : '—';
+    const barW       = fromCount > 0 ? Math.min(100, Math.round(toCount / fromCount * 100)) : 0;
+
+    // ── Preenche cards tx1–tx9
+    if (transition.txId) {
+      const idx = transition.txId.replace('tx','');
+      setEl(transition.txId, taxaPct);
+      setEl('ts' + idx, `${fmtNum(toCount)} de ${fmtNum(fromCount)}`);
+      const barEl = document.getElementById('bar' + idx);
+      if (barEl) barEl.style.width = barW + '%';
+    }
+
+    // ── Card de tempo médio
+    const card = document.createElement('div');
+    card.className = 'time-stage-card';
+
+    if (!data) {
+      card.innerHTML = `
+        <div class="kpi-accent" style="background:${transition.color}"></div>
+        <div class="time-stage-arrow">${transition.label}</div>
+        <div style="margin-top:6px">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;color:${transition.color}">${taxaPct}</span>
+          <span style="font-size:11px;color:var(--text3);margin-left:6px">${fmtNum(toCount)} de ${fmtNum(fromCount)}</span>
+        </div>
+        <div class="time-stage-nodata" style="margin-top:8px">⏱ Tempo: dados insuficientes nas notas</div>`;
+    } else {
+      const avg = fmtHours(data.avg);
+      const minH = fmtHours(data.min);
+      const maxH = fmtHours(data.max);
+      card.innerHTML = `
+        <div class="kpi-accent" style="background:${transition.color}"></div>
+        <div class="time-stage-arrow">${transition.label}</div>
+        <div style="margin-top:6px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;color:${transition.color}">${taxaPct}</span>
+          <span style="font-size:11px;color:var(--text3)">${fmtNum(toCount)} de ${fmtNum(fromCount)}</span>
+        </div>
+        <div class="time-stage-val" style="margin-top:8px">${avg ? avg.val : '—'}<span class="time-stage-unit">${avg ? avg.unit : ''}</span></div>
+        <div class="time-stage-sub">Mín: ${minH ? minH.val+minH.unit : '—'} &nbsp;|&nbsp; Máx: ${maxH ? maxH.val+maxH.unit : '—'}</div>
+        <span class="time-stage-badge">${data.count} lead${data.count!==1?'s':''} analisado${data.count!==1?'s':''}</span>`;
+    }
+    container.appendChild(card);
+  });
+}
   
   // ── FIX PRINCIPAL: usa pipelineStageId para mapear o nome da etapa
   function processOpportunities(opps) {
@@ -908,7 +941,7 @@ function renderFunnelStages(stages, histData) {
     });
   }
   
-  async function loadData() {
+async function loadData() {
     document.getElementById('load-area').style.display = 'flex';
     document.getElementById('load-area').innerHTML = '<div class="spinner"></div><span>Buscando oportunidades...</span>';
     document.getElementById('main').style.display = 'none';
@@ -928,20 +961,19 @@ function renderFunnelStages(stages, histData) {
       document.getElementById('load-area').innerHTML = '<div class="spinner"></div><span>Buscando históricos individuais para cada cartão...</span>';
 
       // 3. BUSCA DE HISTÓRICOS TOTAIS (Para TODOS os cartões)
-      // Criei uma tarefa para cada histórico de cada cartão da imagem
       const histTasks = [
-        () => fetchContactsByTag('etapa:lead-novo', null),       // Histórico p/ Lead Novo
-        () => fetchContactsByTag(TAGS.conv, null),              // Histórico p/ Em Conversa
-        () => fetchContactsByTag('etapa:desqualificado', null),  // Histórico p/ Desqualificados
-        () => fetchContactsByTag(TAGS.qual, null),              // Histórico p/ Qualificados
-        () => fetchContactsByTag('etapa:reuniao-closer', null),  // Histórico p/ Reunião Closer
-        () => fetchContactsByTag(TAGS.fech, null),              // Histórico p/ Contratos Fechados
-        () => fetchContactsByTag('etapa:followup-closer', null), // Histórico p/ Follow Up Closer
-        () => fetchContactsByTag(TAGS.aca, null),               // Histórico p/ Follow Up Ativo
+        () => fetchContactsByTag('etapa:lead-novo', null),
+        () => fetchContactsByTag(TAGS.conv, null),
+        () => fetchContactsByTag('etapa:desqualificado', null),
+        () => fetchContactsByTag(TAGS.qual, null),
+        () => fetchContactsByTag('etapa:reuniao-closer', null),
+        () => fetchContactsByTag(TAGS.fech, null),
+        () => fetchContactsByTag('etapa:followup-closer', null),
+        () => fetchContactsByTag(TAGS.aca, null),
       ];
       const [hNovo, hConv, hDesq, hQual, hReu, hFech, hAcd, hAca] = await runSequential(histTasks, 300);
 
-      // 4. BUSCA DE ATIVIDADE NO PERÍODO (Somente o que houve no mês)[cite: 1]
+      // 4. BUSCA DE ATIVIDADE NO PERÍODO
       const periodTasks = [
         () => fetchContactsByTag(TAGS.conv, range),
         () => fetchContactsByTag(TAGS.qual, range),
@@ -950,63 +982,81 @@ function renderFunnelStages(stages, histData) {
       ];
       const [nowConv, nowQual, nowFech, nowAca] = await runSequential(periodTasks, 300);
 
-      // 5. Variáveis de posicionamento (CRM)[cite: 1]
+      // 5. Variáveis de posicionamento (CRM)
       const novos = stagesNoPeriod['Lead Novo']?.count || 0;
       const desq  = stagesNoPeriod['Desqualificado (triagem)']?.count || 0;
       const reu   = stagesNoPeriod['Reunião Closer']?.count || 0;
       const acd   = stagesNoPeriod['Follow Up Closer']?.count || 0;
 
-      // 6. ATUALIZAÇÃO DOS PARES (Cada cartão agora tem seu histórico)[cite: 1]
-      
+      // 6. ATUALIZAÇÃO DOS PARES
       // TOPO DO FUNIL
       setEl('k-novos', fmtNum(novos));
-      setEl('k-novos-hist', fmtNum(hNovo));   // Histórico específico de Lead Novo
-      
-      setEl('k-conv', fmtNum(nowConv));      
-      setEl('k-conv-hist', fmtNum(hConv));    // Histórico específico de Em Conversa
-      
-      // TRIAGEM
-      setEl('k-desq', fmtNum(desq));   
-      setEl('k-desq-hist', fmtNum(hDesq));    // Histórico específico de Desqualificados
-      
-      setEl('k-qual', fmtNum(nowQual));   
-      setEl('k-qual-hist', fmtNum(hQual));    // Histórico específico de Qualificados
-      
-      // REUNIÃO E FECHAMENTO
-      setEl('k-reu', fmtNum(reu));     
-      setEl('k-reu-hist', fmtNum(hReu));      // Histórico específico de Reunião Closer
-      
-      setEl('k-fech', fmtNum(nowFech));   
-      setEl('k-fech-hist', fmtNum(hFech));    // Histórico específico de Contratos Fechados
-      
-      // ACOMPANHAMENTO
-      setEl('k-acd', fmtNum(acd));     
-      setEl('k-acd-hist', fmtNum(hAcd));      // Histórico específico de Follow Up Closer
-      
-      setEl('k-aca', fmtNum(nowAca));     
-      setEl('k-aca-hist', fmtNum(hAca));      // Histórico específico de Follow Up Ativo
+      setEl('k-novos-hist', fmtNum(hNovo));
+      setEl('k-conv', fmtNum(nowConv));
+      setEl('k-conv-hist', fmtNum(hConv));
 
-      // 7. Renderização Visual e Gráficos[cite: 1]
+      // TRIAGEM
+      setEl('k-desq', fmtNum(desq));
+      setEl('k-desq-hist', fmtNum(hDesq));
+      setEl('k-qual', fmtNum(nowQual));
+      setEl('k-qual-hist', fmtNum(hQual));
+
+      // REUNIÃO E FECHAMENTO
+      setEl('k-reu', fmtNum(reu));
+      setEl('k-reu-hist', fmtNum(hReu));
+      setEl('k-fech', fmtNum(nowFech));
+      setEl('k-fech-hist', fmtNum(hFech));
+
+      // ACOMPANHAMENTO
+      setEl('k-acd', fmtNum(acd));
+      setEl('k-acd-hist', fmtNum(hAcd));
+      setEl('k-aca', fmtNum(nowAca));
+      setEl('k-aca-hist', fmtNum(hAca));
+
+      // 7. Renderização Visual e Gráficos
+      document.getElementById('load-area').innerHTML = '<div class="spinner"></div><span>Montando funil e gráficos...</span>';
+
       const allTagTasks = ALL_TAGS.map(t => () => fetchContactsByTag(t.key, range));
       const tagResults = await runSequential(allTagTasks, 300);
       const tagCounts = {};
       ALL_TAGS.forEach((t, i) => { tagCounts[t.key] = tagResults[i]; });
 
+      // tagCounts histórico separado — usado nas taxas de conversão entre etapas
+      const allTagHistTasks = ALL_TAGS.map(t => () => fetchContactsByTag(t.key, null));
+      const tagHistResults = await runSequential(allTagHistTasks, 300);
+      const tagCountsHist = {};
+      ALL_TAGS.forEach((t, i) => { tagCountsHist[t.key] = tagHistResults[i]; });
+
       const histData = [hNovo, hConv, hQual, hDesq, hReu, hAcd, hAca, hFech];
-  
+
       renderTaxaConversaoReal(tagCounts);
       renderTagFunnel(tagCounts);
       renderFunnelStages(stagesNoPeriod, histData);
       renderValorGrid(stagesAll);
       renderChart(stagesAll, histData);
 
+      // 8. Mostra o dashboard principal antes de calcular tempos
+      // (cálculo de tempos é pesado, usuário já vê os dados enquanto termina)
       document.getElementById('load-area').style.display = 'none';
       document.getElementById('main').style.display = 'block';
 
-      // 8. Timestamps[cite: 1]
+      // 9. Timestamps
       const time = new Date().toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
       setEl('upd-time', 'Atualizado ' + time);
       setEl('footer-time', 'Última atualização: ' + time);
+
+      // 10. Cálculo de tempo entre etapas — roda em background depois do render principal
+      // Usa tagCountsHist (histórico total) para calcular taxas percentuais corretas
+      const timeContainer = document.getElementById('time-stages-grid');
+      timeContainer.innerHTML = '<div class="state-box" style="min-height:120px;grid-column:1/-1"><div class="spinner"></div><span>Calculando tempos entre etapas...</span></div>';
+
+      const transitionData = await calcTimeBetweenStages(status => {
+        timeContainer.innerHTML = `<div class="state-box" style="min-height:120px;grid-column:1/-1"><div class="spinner"></div><span>${status}</span></div>`;
+      });
+
+      // Passa tagCountsHist para usar contagem histórica nas taxas
+      // (período pode ter poucos dados e distorcer a taxa percentual)
+      renderTimeBetweenStages(transitionData, tagCountsHist);
 
     } catch (e) {
       console.error(e);
