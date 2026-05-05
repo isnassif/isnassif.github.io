@@ -1120,6 +1120,27 @@ function renderFunnelStages(stages, histData) {
     });
   }
   
+  function renderTaxasConversao(tagCounts) {
+  STAGE_TRANSITIONS.forEach(transition => {
+    if (!transition.txId) return;
+    const idx = transition.txId.replace('tx', '');
+
+    const fromTagKey = `etapa:${transition.from}`;
+    const toTagKey   = `etapa:${transition.to}`;
+    const fromCount  = tagCounts[fromTagKey] || 0;
+    const toCount    = tagCounts[toTagKey]   || 0;
+
+    const rawPct  = fromCount > 0 ? (toCount / fromCount * 100) : 0;
+    const taxaPct = Math.min(100, rawPct).toFixed(1) + '%';
+    const barW    = Math.min(100, Math.round(rawPct));
+
+    setEl(transition.txId, taxaPct);
+    setEl('ts' + idx, `${fmtNum(toCount)} de ${fmtNum(fromCount)}`);
+    const barEl = document.getElementById('bar' + idx);
+    if (barEl) barEl.style.width = barW + '%';
+  });
+}
+
 async function loadData() {
     document.getElementById('load-area').style.display = 'flex';
     document.getElementById('load-area').innerHTML = '<div class="spinner"></div><span>Buscando oportunidades...</span>';
@@ -1204,6 +1225,7 @@ async function loadData() {
 
       renderTaxaConversaoReal(tagCounts);
       renderTagFunnel(tagCounts);
+      renderTaxasConversao(tagCounts)
       renderFunnelStages(stagesNoPeriod, histData);
       renderValorGrid(stagesAll);
       renderChart(stagesAll, histData);
