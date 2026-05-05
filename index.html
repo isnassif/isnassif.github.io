@@ -891,8 +891,9 @@ const STAGE_TRANSITIONS = [
     const toTagKey   = `etapa:${transition.to}`;
     const fromCount  = tagCounts[fromTagKey] || 0;
     const toCount    = tagCounts[toTagKey]   || 0;
-    const taxaPct    = fromCount > 0 ? (toCount / fromCount * 100).toFixed(1) + '%' : '—';
-    const barW       = fromCount > 0 ? Math.min(100, Math.round(toCount / fromCount * 100)) : 0;
+    const rawPct  = fromCount > 0 ? (toCount / fromCount * 100) : 0;
+    const taxaPct = Math.min(100, rawPct).toFixed(1) + '%';
+    const barW    = Math.min(100, Math.round(rawPct));
 
     // ── Preenche cards tx1–tx9
     if (transition.txId) {
