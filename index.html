@@ -1139,7 +1139,7 @@ async function loadData() {
 
       document.getElementById('load-area').innerHTML = '<div class="spinner"></div><span>Buscando históricos individuais para cada cartão...</span>';
 
-      // 3. BUSCA DE HISTÓRICOS TOTAIS (Para TODOS os cartões)
+      // 3. BUSCA DE HISTÓRICOS TOTAIS
       const histTasks = [
         () => fetchContactsByTag('etapa:lead-novo', null),
         () => fetchContactsByTag(TAGS.conv, null),
@@ -1192,19 +1192,13 @@ async function loadData() {
       setEl('k-aca', fmtNum(nowAca));
       setEl('k-aca-hist', fmtNum(hAca));
 
-      // 7. Renderização Visual e Gráficos
+      // 7. Tags do período para funil e taxas de conversão
       document.getElementById('load-area').innerHTML = '<div class="spinner"></div><span>Montando funil e gráficos...</span>';
 
       const allTagTasks = ALL_TAGS.map(t => () => fetchContactsByTag(t.key, range));
       const tagResults = await runSequential(allTagTasks, 300);
       const tagCounts = {};
       ALL_TAGS.forEach((t, i) => { tagCounts[t.key] = tagResults[i]; });
-
-      // tagCounts histórico separado — usado nas taxas de conversão entre etapas
-      const allTagHistTasks = ALL_TAGS.map(t => () => fetchContactsByTag(t.key, null));
-      const tagHistResults = await runSequential(allTagHistTasks, 300);
-      const tagCountsHist = {};
-      ALL_TAGS.forEach((t, i) => { tagCountsHist[t.key] = tagHistResults[i]; });
 
       const histData = [hNovo, hConv, hQual, hDesq, hReu, hAcd, hAca, hFech];
 
@@ -1214,8 +1208,7 @@ async function loadData() {
       renderValorGrid(stagesAll);
       renderChart(stagesAll, histData);
 
-      // 8. Mostra o dashboard principal antes de calcular tempos
-      // (cálculo de tempos é pesado, usuário já vê os dados enquanto termina)
+      // 8. Mostra o dashboard — usuário já vê tudo enquanto tempos carregam
       document.getElementById('load-area').style.display = 'none';
       document.getElementById('main').style.display = 'block';
 
@@ -1224,27 +1217,35 @@ async function loadData() {
       setEl('upd-time', 'Atualizado ' + time);
       setEl('footer-time', 'Última atualização: ' + time);
 
-      // 10. Cálculo de tempo entre etapas — roda em background depois do render principal
-      // Usa tagCountsHist (histórico total) para calcular taxas percentuais corretas
+      // 10. Tempo por etapa — roda após o dashboard estar visível
       const timeContainer = document.getElementById('time-stages-grid');
-      timeContainer.innerHTML = '<div class="state-box" style="min-height:120px;grid-column:1/-1"><div class="spinner"></div><span>Calculando tempos entre etapas...</span></div>';
+      timeContainer.innerHTML = '<div class="state-box" style="min-height:120px;grid-column:1/-1"><div class="spinner"></div><span>Calculando tempo por etapa...</span></div>';
 
+      // Roda o período primeiro — sempre necessário
+      const timePerStagePeriod = await calcTimePerStage(status => {
+        timeContainer.innerHTML = `<div class="state-box" style="min-height:120px;grid-column:1/-1"><div class="spinner"></div><span>${status}</span></div>`;
+      }, range);
 
-      const timeContainer = document.getElementById('time-stages-grid');
-timeContainer.innerHTML = '<div class="state-box" style="min-height:120px;grid-column:1/-1"><div class="spinner"></div><span>Calculando tempo por etapa...</span></div>';
+      // Histórico: usa cache se disponível, senão renderiza sem comparativo
+      // e calcula em background sem bloquear
+      const rangeKey = range ? range.start.slice(0,10) + range.end.slice(0,10) : 'all';
+      const histCacheKey = `timePerStage:all`;
+      const histCached = cacheGet(histCacheKey);
 
-      const [timePerStagePeriod, timePerStageHist] = await Promise.all([
-  calcTimePerStage(status => {
-    timeContainer.innerHTML = `<div class="state-box" style="min-height:120px;grid-column:1/-1"><div class="spinner"></div><span>${status}</span></div>`;
-  }, range),
-  calcTimePerStage(() => {}, null) // histórico sem filtro, sem atualizar status
-]);
+      if (histCached) {
+        // Cache disponível — renderiza com comparativo imediatamente
+        renderTimePerStage(timePerStagePeriod, histCached);
+      } else {
+        // Sem cache — mostra período já, histórico vem depois
+        renderTimePerStage(timePerStagePeriod, {});
 
-renderTimePerStage(timePerStagePeriod, timePerStageHist);
-
-      // Passa tagCountsHist para usar contagem histórica nas taxas
-      // (período pode ter poucos dados e distorcer a taxa percentual)
-      renderTimeBetweenStages(transitionData, tagCounts);
+        // Calcula histórico em background e atualiza os cards quando terminar
+        calcTimePerStage(() => {}, null)
+          .then(timePerStageHist => {
+            renderTimePerStage(timePerStagePeriod, timePerStageHist);
+          })
+          .catch(e => console.warn('Histórico de tempo falhou silenciosamente:', e));
+      }
 
     } catch (e) {
       console.error(e);
