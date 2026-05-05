@@ -455,17 +455,62 @@
       <div class="divider"></div>
   
       <div class="section-title">Taxas de conversão entre etapas</div>
-      <div class="rate-grid">
-        <div class="rate-card"><div class="rate-label">Lead Novo → Em Conversa</div><div class="rate-val" id="tx1">—</div><div class="rate-sub" id="ts1">—</div><div class="bar-track"><div class="bar-fill" id="bar1" style="background:var(--blue);width:0%"></div></div></div>
-        <div class="rate-card"><div class="rate-label">Em Conversa → Qualificado</div><div class="rate-val" id="tx2">—</div><div class="rate-sub" id="ts2">—</div><div class="bar-track"><div class="bar-fill" id="bar2" style="background:var(--green);width:0%"></div></div></div>
-        <div class="rate-card"><div class="rate-label">Em Conversa → Desqualificado</div><div class="rate-val" id="tx3">—</div><div class="rate-sub" id="ts3">—</div><div class="bar-track"><div class="bar-fill" id="bar3" style="background:var(--red);width:0%"></div></div></div>
-        <div class="rate-card"><div class="rate-label">Qualificado → Reunião Closer</div><div class="rate-val" id="tx4">—</div><div class="rate-sub" id="ts4">—</div><div class="bar-track"><div class="bar-fill" id="bar4" style="background:var(--purple);width:0%"></div></div></div>
-        <div class="rate-card"><div class="rate-label">Reunião → Contrato Fechado</div><div class="rate-val" id="tx5">—</div><div class="rate-sub" id="ts5">—</div><div class="bar-track"><div class="bar-fill" id="bar5" style="background:var(--green);width:0%"></div></div></div>
-        <div class="rate-card"><div class="rate-label">Reunião → Follow Up Ativo</div><div class="rate-val" id="tx6">—</div><div class="rate-sub" id="ts6">—</div><div class="bar-track"><div class="bar-fill" id="bar6" style="background:var(--amber);width:0%"></div></div></div>
-        <div class="rate-card"><div class="rate-label">Follow Up Ativo → Contrato (hist.)</div><div class="rate-val" id="tx7">—</div><div class="rate-sub" id="ts7">—</div><div class="bar-track"><div class="bar-fill" id="bar7" style="background:#06b6d4;width:0%"></div></div></div>
-        <div class="rate-card"><div class="rate-label">Follow Up Closer → Contrato</div><div class="rate-val" id="tx8">—</div><div class="rate-sub" id="ts8">—</div><div class="bar-track"><div class="bar-fill" id="bar8" style="background:var(--purple);width:0%"></div></div></div>
-        <div class="rate-card highlight"><div class="rate-label">Conversão geral (Lead → Contrato)</div><div class="rate-val" id="tx9">—</div><div class="rate-sub" id="ts9">leads → contratos fechados</div><div class="bar-track"><div class="bar-fill" id="bar9" style="background:var(--green);width:0%"></div></div></div>
-      </div>
+      <<div class="rate-grid">
+  <div class="rate-card">
+    <div class="rate-label">Lead Novo → Qualificado</div>
+    <div class="rate-val" id="tx1">—</div>
+    <div class="rate-sub" id="ts1">—</div>
+    <div class="bar-track"><div class="bar-fill" id="bar1" style="background:var(--green);width:0%"></div></div>
+  </div>
+  <div class="rate-card">
+    <div class="rate-label">Lead Novo → Desqualificado</div>
+    <div class="rate-val" id="tx2">—</div>
+    <div class="rate-sub" id="ts2">—</div>
+    <div class="bar-track"><div class="bar-fill" id="bar2" style="background:var(--red);width:0%"></div></div>
+  </div>
+  <div class="rate-card">
+    <div class="rate-label">Qualificado → Em Conversa</div>
+    <div class="rate-val" id="tx3">—</div>
+    <div class="rate-sub" id="ts3">—</div>
+    <div class="bar-track"><div class="bar-fill" id="bar3" style="background:var(--blue);width:0%"></div></div>
+  </div>
+  <div class="rate-card">
+    <div class="rate-label">Qualificado → Reunião Closer</div>
+    <div class="rate-val" id="tx4">—</div>
+    <div class="rate-sub" id="ts4">—</div>
+    <div class="bar-track"><div class="bar-fill" id="bar4" style="background:var(--purple);width:0%"></div></div>
+  </div>
+  <div class="rate-card">
+    <div class="rate-label">Reunião Closer → Follow Up Closer</div>
+    <div class="rate-val" id="tx5">—</div>
+    <div class="rate-sub" id="ts5">—</div>
+    <div class="bar-track"><div class="bar-fill" id="bar5" style="background:var(--amber);width:0%"></div></div>
+  </div>
+  <div class="rate-card">
+    <div class="rate-label">Reunião Closer → Follow Up Ativo</div>
+    <div class="rate-val" id="tx6">—</div>
+    <div class="rate-sub" id="ts6">—</div>
+    <div class="bar-track"><div class="bar-fill" id="bar6" style="background:var(--amber);width:0%"></div></div>
+  </div>
+  <div class="rate-card">
+    <div class="rate-label">Reunião Closer → Contrato Fechado</div>
+    <div class="rate-val" id="tx7">—</div>
+    <div class="rate-sub" id="ts7">—</div>
+    <div class="bar-track"><div class="bar-fill" id="bar7" style="background:var(--green);width:0%"></div></div>
+  </div>
+  <div class="rate-card">
+    <div class="rate-label">Follow Up Ativo → Contrato Fechado</div>
+    <div class="rate-val" id="tx8">—</div>
+    <div class="rate-sub" id="ts8">—</div>
+    <div class="bar-track"><div class="bar-fill" id="bar8" style="background:#0891b2;width:0%"></div></div>
+  </div>
+  <div class="rate-card highlight">
+    <div class="rate-label">Follow Up Closer → Contrato Fechado</div>
+    <div class="rate-val" id="tx9">—</div>
+    <div class="rate-sub" id="ts9">—</div>
+    <div class="bar-track"><div class="bar-fill" id="bar9" style="background:var(--purple);width:0%"></div></div>
+  </div>
+  </div>
   
       <div class="divider"></div>
   
@@ -1098,7 +1143,7 @@ async function loadData() {
 
       // Passa tagCountsHist para usar contagem histórica nas taxas
       // (período pode ter poucos dados e distorcer a taxa percentual)
-      renderTimeBetweenStages(transitionData, tagCountsHist);
+      renderTimeBetweenStages(transitionData, tagCounts);
 
     } catch (e) {
       console.error(e);
