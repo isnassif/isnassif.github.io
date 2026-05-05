@@ -725,10 +725,13 @@ const STAGE_TRANSITIONS = [
     return match ? match[1].trim().toLowerCase() : null;
   }
   
-  async function calcTimeBetweenStages(updateStatus) {
-    const cacheKey = `transitions:${period}`;
+  async function calcTimeBetweenStages(updateStatus, range) {
+    const rangeKey = range ? range.start.slice(0,10) + range.end.slice(0,10) : 'all';
+    const cacheKey = `transitions:${rangeKey}`;
     const cached = cacheGet(cacheKey); if(cached) return cached;
+
     updateStatus('Buscando contatos para análise de tempo...');
+
     let allContacts = [], startAfter = null, startAfterId = null;
     while(true) {
       const params = { locationId: LOC, limit: 100 };
@@ -742,50 +745,89 @@ const STAGE_TRANSITIONS = [
       startAfterId = d.meta.startAfterId;
       await sleep(200);
     }
+
     updateStatus(`Analisando notas de ${allContacts.length} contatos...`);
+
+    // Limites do período em ms — usados para filtrar as notas
+    const fromMs = range ? new Date(range.start).getTime() : null;
+    const toMs   = range ? new Date(range.end).getTime()   : null;
+
     const BATCH = 10;
     const stageTimestamps = {};
+
     for (let i = 0; i < allContacts.length; i += BATCH) {
       const batch = allContacts.slice(i, i + BATCH);
       await Promise.all(batch.map(async (contact) => {
         const notes = await fetchContactNotes(contact.id);
+
         const funiNotes = notes.filter(n => {
           const body = n.body || n.text || n.note || '';
-          return body.toLowerCase().includes('funil::');
+          if (!body.toLowerCase().includes('funil::')) return false;
+
+          // ── FILTRO DE DATA: só considera notas dentro do período selecionado
+          if (fromMs && toMs) {
+            const ts = parseNoteTimestamp(n);
+            if (!ts) return false;
+            const noteMs = ts.getTime();
+            if (noteMs < fromMs || noteMs > toMs) return false;
+          }
+
+          return true;
         });
+
         if (funiNotes.length === 0) return;
+
         stageTimestamps[contact.id] = {};
+
         funiNotes.forEach(note => {
           const body = note.body || note.text || note.note || '';
           const stage = parseNoteStage(body);
           const ts = parseNoteTimestamp(note);
+
           if (stage && ts) {
-            if (!stageTimestamps[contact.id][stage] || ts < stageTimestamps[contact.id][stage]) {
+            // ── PROTEÇÃO CONTRA LEAD QUE VOLTA:
+            // Sempre guarda o timestamp MAIS ANTIGO de cada etapa.
+            // Se o lead voltou para a etapa, a nota mais recente é ignorada.
+            if (
+              !stageTimestamps[contact.id][stage] ||
+              ts < stageTimestamps[contact.id][stage]
+            ) {
               stageTimestamps[contact.id][stage] = ts;
             }
           }
         });
       }));
+
       if (i + BATCH < allContacts.length) await sleep(300);
-      updateStatus(`Analisando notas... ${Math.min(i+BATCH, allContacts.length)}/${allContacts.length} contatos`);
+      updateStatus(`Analisando notas... ${Math.min(i + BATCH, allContacts.length)}/${allContacts.length} contatos`);
     }
+
     const results = {};
     STAGE_TRANSITIONS.forEach(transition => {
       const diffs = [];
       Object.values(stageTimestamps).forEach(stages => {
         const fromTs = stages[transition.from];
-        const toTs = stages[transition.to];
+        const toTs   = stages[transition.to];
+
+        // Só conta se ambas as etapas têm registro E a chegada foi depois da saída
         if (fromTs && toTs && toTs > fromTs) {
-          diffs.push((toTs - fromTs) / (1000 * 60 * 60));
+          diffs.push((toTs - fromTs) / (1000 * 60 * 60)); // diferença em horas
         }
       });
+
       if (diffs.length > 0) {
-        const avg = diffs.reduce((a,b) => a+b, 0) / diffs.length;
-        results[`${transition.from}->${transition.to}`] = { avg, count: diffs.length, min: Math.min(...diffs), max: Math.max(...diffs) };
+        const avg = diffs.reduce((a, b) => a + b, 0) / diffs.length;
+        results[`${transition.from}->${transition.to}`] = {
+          avg,
+          count: diffs.length,
+          min: Math.min(...diffs),
+          max: Math.max(...diffs)
+        };
       } else {
         results[`${transition.from}->${transition.to}`] = null;
       }
     });
+
     cacheSet(cacheKey, results);
     return results;
   }
@@ -1050,9 +1092,9 @@ async function loadData() {
       const timeContainer = document.getElementById('time-stages-grid');
       timeContainer.innerHTML = '<div class="state-box" style="min-height:120px;grid-column:1/-1"><div class="spinner"></div><span>Calculando tempos entre etapas...</span></div>';
 
-      const transitionData = await calcTimeBetweenStages(status => {
-        timeContainer.innerHTML = `<div class="state-box" style="min-height:120px;grid-column:1/-1"><div class="spinner"></div><span>${status}</span></div>`;
-      });
+        const transitionData = await calcTimeBetweenStages(status => {
+      timeContainer.innerHTML = `<div class="state-box" style="min-height:120px;grid-column:1/-1"><div class="spinner"></div><span>${status}</span></div>`;
+    }, range);
 
       // Passa tagCountsHist para usar contagem histórica nas taxas
       // (período pode ter poucos dados e distorcer a taxa percentual)
