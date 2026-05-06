@@ -914,7 +914,6 @@ function renderTimePerStage(periodData, histData) {
       ${pd ? `
         <div style="display:flex;align-items:baseline;gap:6px;margin-top:8px;flex-wrap:wrap">
           <div class="time-stage-val">${avgFmt ? avgFmt.val : '—'}<span class="time-stage-unit">${avgFmt ? avgFmt.unit : ''}</span></div>
-          ${diffHtml}
         </div>
         <div class="time-stage-sub" style="margin-top:4px">
           Mín: ${minFmt ? minFmt.val + minFmt.unit : '—'} &nbsp;|&nbsp; Máx: ${maxFmt ? maxFmt.val + maxFmt.unit : '—'}
