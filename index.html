@@ -768,11 +768,11 @@ const STAGE_TRANSITIONS = [
   
 function parseNoteStage(noteBody) {
   if (!noteBody) return null;
-  // Remove HTML tags para pegar o texto puro
   const text = noteBody.replace(/<[^>]+>/g, '').trim();
-  // Formato real: funil::slug-etapa::
   const match = text.match(/funil::([^:]+)::/i);
-  return match ? match[1].trim().toLowerCase() : null;
+  if (!match) return null;
+  // Normaliza: underscore → hífen, lowercase
+  return match[1].trim().toLowerCase().replace(/_/g, '-');
 }
   
  async function calcTimePerStage(updateStatus, range) {
