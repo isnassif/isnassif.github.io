@@ -759,17 +759,21 @@ const STAGE_TRANSITIONS = [
   }
   
   function parseNoteTimestamp(note) {
-    const raw = note.dateAdded || note.createdAt || note.date_added || note.updatedAt || null;
+    // createdAt é undefined — usar sempre dateAdded
+    const raw = note.dateAdded || note.date_added || null;
     if (!raw) return null;
     const parsed = new Date(raw);
     return isNaN(parsed.getTime()) ? null : parsed;
-  }
+}
   
-  function parseNoteStage(noteBody) {
-    if (!noteBody) return null;
-    const match = noteBody.match(/funil::([^:]+)::/i);
-    return match ? match[1].trim().toLowerCase() : null;
-  }
+function parseNoteStage(noteBody) {
+  if (!noteBody) return null;
+  // Remove HTML tags para pegar o texto puro
+  const text = noteBody.replace(/<[^>]+>/g, '').trim();
+  // Formato real: funil::slug-etapa::
+  const match = text.match(/funil::([^:]+)::/i);
+  return match ? match[1].trim().toLowerCase() : null;
+}
   
  async function calcTimePerStage(updateStatus, range) {
   const rangeKey = range ? range.start.slice(0,10) + range.end.slice(0,10) : 'all';
@@ -811,7 +815,8 @@ const STAGE_TRANSITIONS = [
       const funiNotes = notes
         .filter(n => {
           const body = n.body || n.text || n.note || '';
-          if (!body.toLowerCase().includes('funil::')) return false;
+          const plainText = body.replace(/<[^>]+>/g, '');
+          if (!plainText.toLowerCase().includes('funil::')) return false; 
           if (fromMs && toMs) {
             const ts = parseNoteTimestamp(n);
             if (!ts) return false;
@@ -851,6 +856,14 @@ const STAGE_TRANSITIONS = [
         const hours = (nextTs - entryTs) / (1000 * 60 * 60);
         if (hours >= 0 && stageDurations[stage]) {
           stageDurations[stage].push(hours);
+        }
+      }
+      // ADICIONE ISSO — última etapa: usa now como referência de saída
+      const [lastStage, lastEntryTs] = stageOrder[stageOrder.length - 1];
+      if (lastStage && stageDurations[lastStage] !== undefined) {
+        const hoursInLast = (Date.now() - lastEntryTs.getTime()) / (1000 * 60 * 60);
+        if (hoursInLast >= 0 && hoursInLast < 8760) { // ignora se > 1 ano (dado sujo)
+          stageDurations[lastStage].push(hoursInLast);
         }
       }
       // Última etapa: não tem saída registrada, ignora
