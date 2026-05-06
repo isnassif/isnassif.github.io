@@ -1228,7 +1228,7 @@ async function loadData() {
       renderTaxasConversao(tagCounts)
       renderFunnelStages(stagesNoPeriod, histData);
       renderValorGrid(stagesAll);
-      renderChart(stagesAll, histData);
+      renderChart(stagesNoPeriod, histData);
 
       // 8. Mostra o dashboard — usuário já vê tudo enquanto tempos carregam
       document.getElementById('load-area').style.display = 'none';
