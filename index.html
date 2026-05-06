@@ -937,9 +937,12 @@ function renderTimePerStage(periodData, histData) {
         </div>
         <span class="time-stage-badge">${pd.count} lead${pd.count !== 1 ? 's' : ''}</span>
       ` : `
-        <div class="time-stage-nodata" style="margin-top:8px">Dados insuficientes nas notas</div>
-        ${hd ? `<div style="margin-top:6px;font-size:11px;color:var(--text3)">Histórico: ${histFmt ? histFmt.val + histFmt.unit : '—'} em média</div>` : ''}
-      `}
+         <div style="margin-top:8px;display:flex;align-items:center;gap:6px">
+    <span style="font-size:16px">📭</span>
+    <span style="font-size:12px;color:var(--text3);font-style:italic">Nenhum lead neste período</span>
+  </div>
+  ${hd ? `<div style="margin-top:8px;font-size:11px;color:var(--text3)">Histórico: ${histFmt ? histFmt.val + histFmt.unit : '—'} em média</div>` : ''}
+`}
     `;
     container.appendChild(card);
   });
