@@ -775,7 +775,7 @@ function parseNoteStage(noteBody) {
   return match[1].trim().toLowerCase().replace(/_/g, '-');
 }
   
- async function calcTimePerStage(updateStatus, range) {
+async function calcTimePerStage(updateStatus, range) {
   const rangeKey = range ? range.start.slice(0,10) + range.end.slice(0,10) : 'all';
   const cacheKey = `timePerStage:${rangeKey}`;
   const cached = cacheGet(cacheKey); if(cached) return cached;
@@ -801,7 +801,6 @@ function parseNoteStage(noteBody) {
   const fromMs = range ? new Date(range.start).getTime() : null;
   const toMs   = range ? new Date(range.end).getTime()   : null;
 
-  // stageDurations[etapa] = array de horas que cada lead ficou nela
   const stageDurations = {};
   ALL_TAGS.forEach(t => { stageDurations[t.key.replace('etapa:','')] = []; });
 
@@ -811,19 +810,12 @@ function parseNoteStage(noteBody) {
     await Promise.all(batch.map(async (contact) => {
       const notes = await fetchContactNotes(contact.id);
 
-      // Filtra só notas funil:: e dentro do período
+      // 1. Primeiro declara funiNotes
       const funiNotes = notes
         .filter(n => {
           const body = n.body || n.text || n.note || '';
           const plainText = body.replace(/<[^>]+>/g, '');
-          if (!plainText.toLowerCase().includes('funil::')) return false; 
-          if (fromMs && toMs) {
-            const entryNote = funiNotes.find(n => n.stage === 'lead-novo');
-            if (!entryNote) return;
-            const entryMs = entryNote.ts.getTime();
-            if (entryMs < fromMs || entryMs > toMs) return;
-          }
-          return true;
+          return plainText.toLowerCase().includes('funil::');
         })
         .map(n => {
           const body = n.body || n.text || n.note || '';
@@ -836,8 +828,15 @@ function parseNoteStage(noteBody) {
 
       if (funiNotes.length === 0) return;
 
-      // Proteção contra lead que volta:
-      // Agrupa por etapa e pega sempre o timestamp MAIS ANTIGO
+      // 2. Filtra pelo período via nota de lead-novo
+      if (fromMs && toMs) {
+        const entryNote = funiNotes.find(n => n.stage === 'lead-novo');
+        if (!entryNote) return;
+        const entryMs = entryNote.ts.getTime();
+        if (entryMs < fromMs || entryMs > toMs) return;
+      }
+
+      // 3. Agrupa por etapa e pega timestamp mais antigo
       const firstEntry = {};
       funiNotes.forEach(({ stage, ts }) => {
         if (!firstEntry[stage] || ts < firstEntry[stage]) {
@@ -845,11 +844,9 @@ function parseNoteStage(noteBody) {
         }
       });
 
-      // Monta array ordenado por timestamp de entrada
-      const stageOrder = Object.entries(firstEntry)
-        .sort((a, b) => a[1] - b[1]);
+      const stageOrder = Object.entries(firstEntry).sort((a, b) => a[1] - b[1]);
 
-      // Calcula permanência: tempo entre entrada na etapa atual e entrada na próxima
+      // 4. Calcula permanência entre etapas consecutivas
       for (let j = 0; j < stageOrder.length - 1; j++) {
         const [stage, entryTs] = stageOrder[j];
         const [, nextTs]       = stageOrder[j + 1];
@@ -858,15 +855,15 @@ function parseNoteStage(noteBody) {
           stageDurations[stage].push(hours);
         }
       }
-      // ADICIONE ISSO — última etapa: usa now como referência de saída
+
+      // 5. Última etapa: usa Date.now() como referência de saída
       const [lastStage, lastEntryTs] = stageOrder[stageOrder.length - 1];
       if (lastStage && stageDurations[lastStage] !== undefined) {
         const hoursInLast = (Date.now() - lastEntryTs.getTime()) / (1000 * 60 * 60);
-        if (hoursInLast >= 0 && hoursInLast < 8760) { // ignora se > 1 ano (dado sujo)
+        if (hoursInLast >= 0 && hoursInLast < 8760) {
           stageDurations[lastStage].push(hoursInLast);
         }
       }
-      // Última etapa: não tem saída registrada, ignora
     }));
 
     if (i + BATCH < allContacts.length) await sleep(300);
