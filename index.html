@@ -907,19 +907,6 @@ function renderTimePerStage(periodData, histData) {
     const minFmt  = pd  ? fmtHours(pd.min)  : null;
     const maxFmt  = pd  ? fmtHours(pd.max)  : null;
 
-    // Comparação período vs histórico
-    let diffHtml = '';
-    if (pd && hd && hd.avg > 0) {
-      const diff = ((pd.avg - hd.avg) / hd.avg * 100).toFixed(0);
-      const isWorse = pd.avg > hd.avg;
-      const sign = diff > 0 ? '+' : '';
-      diffHtml = `<span style="
-        font-size:11px;font-weight:600;font-family:'JetBrains Mono',monospace;
-        padding:2px 7px;border-radius:5px;margin-left:8px;
-        background:${isWorse ? 'var(--red-light)' : 'var(--green-light)'};
-        color:${isWorse ? 'var(--red)' : 'var(--green)'};
-      ">${sign}${diff}% vs histórico</span>`;
-    }
 
     card.innerHTML = `
       <div class="kpi-accent" style="background:${color}"></div>
@@ -1240,7 +1227,7 @@ async function loadData() {
       renderTagFunnel(tagCounts);
       renderTaxasConversao(tagCounts)
       renderFunnelStages(stagesNoPeriod, histData);
-      renderValorGrid(stagesNoPeriod);
+      renderValorGrid(stagesAll);
       renderChart(stagesNoPeriod, histData);
 
       // 8. Mostra o dashboard — usuário já vê tudo enquanto tempos carregam
