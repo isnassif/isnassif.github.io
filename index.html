@@ -214,7 +214,7 @@
     font-family: 'JetBrains Mono', monospace; padding: 2px 7px; border-radius: 5px;
     margin-top: 8px; background: var(--bg); color: var(--text3); border: 1px solid var(--border);
   }
-  .time-stage-nodata { font-size: 12px; color: var(--text3); font-style: italic; margin-top: 4px; }
+  .time-stage-no { font-size: 12px; color: var(--text3); font-style: italic; margin-top: 4px; }
   .state-box { display: flex; align-items: center; justify-content: center; min-height: 240px; flex-direction: column; gap: 14px; color: var(--text3); font-size: 13px; }
   .spinner { width: 28px; height: 28px; border: 2px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin .7s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
@@ -247,7 +247,7 @@
       <div class="header-right">
         <span class="live-badge"><span class="dot"></span>Ao vivo</span>
         <span class="upd-time" id="upd-time">—</span>
-        <button class="btn-refresh" onclick="loadData()">
+        <button class="btn-refresh" onclick="load()">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
           Atualizar
         </button>
@@ -257,19 +257,19 @@
     <div class="filters">
       <div class="filter-row">
         <span class="filter-label">Período</span>
-        <button class="fbtn active" data-period="this_month" onclick="setPeriod(this)">Este mês</button>
-        <button class="fbtn" data-period="last_month" onclick="setPeriod(this)">Mês passado</button>
-        <button class="fbtn" data-period="last_7" onclick="setPeriod(this)">7 dias</button>
-        <button class="fbtn" data-period="last_30" onclick="setPeriod(this)">30 dias</button>
-        <button class="fbtn" data-period="last_90" onclick="setPeriod(this)">90 dias</button>
-        <button class="fbtn" data-period="this_year" onclick="setPeriod(this)">Este ano</button>
-        <button class="fbtn" data-period="all" onclick="setPeriod(this)">Todo período</button>
-        <button class="fbtn" data-period="custom" onclick="setPeriod(this)">Personalizado</button>
+        <button class="fbtn active" -period="this_month" onclick="setPeriod(this)">Este mês</button>
+        <button class="fbtn" -period="last_month" onclick="setPeriod(this)">Mês passado</button>
+        <button class="fbtn" -period="last_7" onclick="setPeriod(this)">7 dias</button>
+        <button class="fbtn" -period="last_30" onclick="setPeriod(this)">30 dias</button>
+        <button class="fbtn" -period="last_90" onclick="setPeriod(this)">90 dias</button>
+        <button class="fbtn" -period="this_year" onclick="setPeriod(this)">Este ano</button>
+        <button class="fbtn" -period="all" onclick="setPeriod(this)">Todo período</button>
+        <button class="fbtn" -period="custom" onclick="setPeriod(this)">Personalizado</button>
       </div>
       <div class="custom-row" id="custom-row" style="display:none">
         <label>De</label><input type="date" id="dt-from">
         <label>até</label><input type="date" id="dt-to">
-        <button class="apply-btn" onclick="loadData()">Aplicar</button>
+        <button class="apply-btn" onclick="load()">Aplicar</button>
       </div>
     </div>
   
@@ -557,7 +557,7 @@
   const PID = '5udha9tlfLPhcYe1zW3p';
   const GHL_TOKEN = 'pit-cdab097d-e23c-4a89-b85d-8c4f2cce21a7';
   const API = 'https://services.leadconnectorhq.com';
-  const DATA_INICIO = new Date('2026-05-06T00:00:00');
+  const _INICIO = new Date('2026-05-07T00:00:00');
  
   // ── FIX 1: Mapeamento por ID real (obtido da API /opportunities/pipelines)
   const STAGE_ID_MAP = {
@@ -643,7 +643,7 @@ const STAGE_TRANSITIONS = [
     }
     try {
       const resp = await fetchWithRetry(url, fetchOptions);
-      const data = await resp.json();
+      const  = await resp.json();
       if (!resp.ok) throw new Error(data.message || `API error ${resp.status}`);
       return data;
     } catch(e) {
@@ -658,7 +658,7 @@ const STAGE_TRANSITIONS = [
   }
     
   function getDateRange() {
-    const DATA_INICIO = new Date('2026-05-06T00:00:00');
+    const DATA_INICIO = new Date('2026-05-07T00:00:00');
     const now = new Date(); let s, e;
     if(period==='this_month'){s=new Date(now.getFullYear(),now.getMonth(),1);e=now;}
     else if(period==='last_month'){s=new Date(now.getFullYear(),now.getMonth()-1,1);e=new Date(now.getFullYear(),now.getMonth(),0,23,59,59);}
