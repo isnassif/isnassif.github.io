@@ -557,7 +557,8 @@
   const PID = '5udha9tlfLPhcYe1zW3p';
   const GHL_TOKEN = 'pit-cdab097d-e23c-4a89-b85d-8c4f2cce21a7';
   const API = 'https://services.leadconnectorhq.com';
-  
+  const DATA_INICIO = new Date('2026-05-06T00:00:00');
+ 
   // ── FIX 1: Mapeamento por ID real (obtido da API /opportunities/pipelines)
   const STAGE_ID_MAP = {
     'fe70aca0-3145-44db-85d3-a5c178ce82df': 'Lead Novo',
@@ -696,30 +697,33 @@ const STAGE_TRANSITIONS = [
     if (days < 30) return { val: Math.round(days * 10) / 10, unit: 'd' };
     return { val: Math.round(days / 30 * 10) / 10, unit: 'meses' };
   }
-  
+
   async function fetchAllOpportunities(range) {
-    const cacheKey=`opps:${range?range.start+range.end:'all'}`;
-    const cached=cacheGet(cacheKey); if(cached){return cached;}
-    let all=[], startAfter=null, startAfterId=null;
+    const effectiveRange = range || { start: DATA_INICIO.toISOString(), end: new Date().toISOString() };
+    const cacheKey = `opps:${effectiveRange.start+effectiveRange.end}`;
+    const cached = cacheGet(cacheKey); if(cached){ return cached; }
+    
+    let all = [], startAfter = null, startAfterId = null;
     while(true){
-      const params={ location_id: LOC, pipeline_id: PID, limit:100 };
+      const params = { location_id: LOC, pipeline_id: PID, limit: 100 };
       if(startAfter) params.startAfter = startAfter;
       if(startAfterId) params.startAfterId = startAfterId;
-      const d=await ghlFetch('/opportunities/search', params);
-      const ops=d.opportunities||[];
-      const filtered=range?ops.filter(op=>{
-        const created=op.createdAt?new Date(op.createdAt).getTime():0;
-        return created>=new Date(range.start).getTime()&&created<=new Date(range.end).getTime();
-      }):ops;
-      all=all.concat(filtered);
-      if(ops.length<100||!d.meta?.nextPageUrl) break;
-      startAfter=d.meta.startAfter;
-      startAfterId=d.meta.startAfterId;
+      const d = await ghlFetch('/opportunities/search', params);
+      const ops = d.opportunities || [];
+      const filtered = ops.filter(op => {
+        const created = op.createdAt ? new Date(op.createdAt).getTime() : 0;
+        return created >= new Date(effectiveRange.start).getTime() && 
+               created <= new Date(effectiveRange.end).getTime();
+      });
+      all = all.concat(filtered);
+      if(ops.length < 100 || !d.meta?.nextPageUrl) break;
+      startAfter = d.meta.startAfter;
+      startAfterId = d.meta.startAfterId;
       await sleep(150);
     }
-    cacheSet(cacheKey,all); return all;
+    cacheSet(cacheKey, all); return all;
   }
-  
+    
   async function fetchContactsByTag(tag, range) {
     const rangeKey = range ? range.start.slice(0,10)+range.end.slice(0,10) : 'all';
     const cacheKey=`tag:${tag}:${rangeKey}`; const cached=cacheGet(cacheKey); if(cached!==null){return cached;}
