@@ -257,14 +257,14 @@
     <div class="filters">
       <div class="filter-row">
         <span class="filter-label">Período</span>
-        <button class="fbtn active" -period="this_month" onclick="setPeriod(this)">Este mês</button>
-        <button class="fbtn" -period="last_month" onclick="setPeriod(this)">Mês passado</button>
-        <button class="fbtn" -period="last_7" onclick="setPeriod(this)">7 dias</button>
-        <button class="fbtn" -period="last_30" onclick="setPeriod(this)">30 dias</button>
-        <button class="fbtn" -period="last_90" onclick="setPeriod(this)">90 dias</button>
-        <button class="fbtn" -period="this_year" onclick="setPeriod(this)">Este ano</button>
-        <button class="fbtn" -period="all" onclick="setPeriod(this)">Todo período</button>
-        <button class="fbtn" -period="custom" onclick="setPeriod(this)">Personalizado</button>
+        <button class="fbtn active" data-period="this_month" onclick="setPeriod(this)">Este mês</button>
+        <button class="fbtn" data-period="last_month" onclick="setPeriod(this)">Mês passado</button>
+        <button class="fbtn" data-period="last_7" onclick="setPeriod(this)">7 dias</button>
+        <button class="fbtn" data-period="last_30" onclick="setPeriod(this)">30 dias</button>
+        <button class="fbtn" data-period="last_90" onclick="setPeriod(this)">90 dias</button>
+        <button class="fbtn" data-period="this_year" onclick="setPeriod(this)">Este ano</button>
+        <button class="fbtn" data-period="all" onclick="setPeriod(this)">Todo período</button>
+        <button class="fbtn" data-period="custom" onclick="setPeriod(this)">Personalizado</button>
       </div>
       <div class="custom-row" id="custom-row" style="display:none">
         <label>De</label><input type="date" id="dt-from">
