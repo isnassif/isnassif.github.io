@@ -643,7 +643,7 @@ const STAGE_TRANSITIONS = [
     }
     try {
       const resp = await fetchWithRetry(url, fetchOptions);
-      const  = await resp.json();
+      const data = await resp.json();
       if (!resp.ok) throw new Error(data.message || `API error ${resp.status}`);
       return data;
     } catch(e) {
