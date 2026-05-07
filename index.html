@@ -655,21 +655,24 @@ const STAGE_TRANSITIONS = [
     for (const task of tasks) { results.push(await task()); if(delayMs>0) await sleep(delayMs); }
     return results;
   }
-  
+    
   function getDateRange() {
-    const now=new Date(); let s,e;
+    const DATA_INICIO = new Date('2026-05-07T00:00:00');
+    const now = new Date(); let s, e;
     if(period==='this_month'){s=new Date(now.getFullYear(),now.getMonth(),1);e=now;}
     else if(period==='last_month'){s=new Date(now.getFullYear(),now.getMonth()-1,1);e=new Date(now.getFullYear(),now.getMonth(),0,23,59,59);}
     else if(period==='last_7'){s=new Date(now-7*864e5);e=now;}
     else if(period==='last_30'){s=new Date(now-30*864e5);e=now;}
     else if(period==='last_90'){s=new Date(now-90*864e5);e=now;}
     else if(period==='this_year'){s=new Date(now.getFullYear(),0,1);e=now;}
-    else if(period==='all'){return null;}
+    else if(period==='all'){s=DATA_INICIO;e=now;}
     else if(period==='custom'){
       const f=document.getElementById('dt-from').value,t=document.getElementById('dt-to').value;
       if(!f||!t) return null;
       s=new Date(f);e=new Date(t);e.setHours(23,59,59);
     }
+    // Garante que nunca vai antes de 07/05/2026
+    if(s && s < DATA_INICIO) s = DATA_INICIO;
     return {start:s.toISOString(),end:e.toISOString()};
   }
   
